@@ -1,0 +1,43 @@
+####MARKERS####
+PS <- c( "Wnt8a", "Trh", "Pim2")
+#####MESODERM#####
+#LPM culled for YS expressors (Bmp4 and Foxf1) with added Choi markers expressed Nascent/Mixed higher than EXE.  3-23-22 - culled more for same reason - Gata4, Vstm2b and Pdlim3
+LPM <- c( "Mixl1", "Cxcr4", "Myl4", "Asb4", "Dkk1", "Lefty2")
+
+#Genes from Saykali et al Elife '19 - EEM (Extra-embryonic mesoderm) and EM (Embryonic mesoderm)
+EEM <- c("Runx1", "Hapln1", "Fli1", "Ddah1", "Tal1", "Sox7", "Gata2", "Lmo2", "Col1a1", "Morc4", "Lgr5", "Lama4", "Dlk1")
+EM <- c("Lefty2", "Lrig3", "Pcdh8", "Zic3", "Lhx1", "Dll1", "Pcdh19", "Sema6d", "Jag1", "Zic2", "Lfng", "Pmaip1", "Dll3", "Rimbp2")
+
+#Other mesoderm mostly from Pijuan-Sala et al - either top 10 from group or a comparison of one vs another mesoderm.  Each gene was then viewed in Gottgens data to ensure specificity
+Nascent_mesoderm <- c("Lefty2", "Mesp2", "Pcdh8", "Prss22", "Cdh20", "Slpi", "Pmaip1", "Tmem229a", "Arl4d", "Rimbp2", "Tdgf1")
+Somitic_mesoderm <- c("Aldh1a2", "Tbx6", "Rhbg", "Hes7")
+Pharyngeal_mesoderm <- c("Gata5", "A330008L17Rik", "Nxf3", "Fibin", "Pnliprp1", "Tlx1")
+Paraxial_mesoderm <- c( "Rspo1", "Ebf2", "Ptgfr", "Tbx1", "Meox2", "Ebf3")
+EXE_mesoderm <- c("Hand1", "Col9a1", "Spin2c", "Cdx2", "Cdx4", "Hoxd11")
+
+#Mesenchyme
+Mesenchyme <- c("Tdo2", "Colec11", "Gdf6", "Snai2", "Wisp1", "Ccdc80", "Sdpr", "Lum", "Postn", "Mab21l2")
+
+#Cardiomyocytes
+Cardiomyocytes <- c("Myl7", "Myl4", "Nkx2-5", "Tnnt2", "Mef2c", "Tnnc1", "Sfrp5", "Nexn", "Sh3bgr", "Csrp3", "Gm45123", "Cnn1", "Unc45b", "Ptges3l" )
+
+#other gene lists for LPM
+#Lateral Plate Mesoderm lineage markers Prummel KD Mosimann C 2019 Nature Comm Zebrafish#
+Lateral_plate_intro <- c("Hand1", "Hand2", "Osr1", "Foxf1", "Prrx1", "Mesp1", "Etv2", "Cxcr4", "Foxh1")
+#drivers for early LPM induction - loss will allow later LPM including Hand2 exp contain drl enhancer
+Lateral_plate_drivers <- c("Foxh1", "Mixl1", "Eomes")
+#do not know where these come from in the Prummel et al paper but from there....
+Lateral_plate_additional <- c( "Gata4", "Mef2c", "Tbx5", "Nkx2-5", "mir-133", "Foxo1", "Etv2", "Klf2", "Tal1", "Lmo2",
+                               "Erg", "Gata2", "Runx1", "Cxcr4", "Bmp4", "Fgf9", "Apela", "Inhba" )
+#MY INITIAL LATERAL PLATE MARKERS Eomes, Foxh1, Mixl1 (Prummel, 2019) - Gata4 (Rojas 2005) - Cxcr4 (Mcgrath Palis 1999) - Bmp4 (Chandler KJ 2009) - Foxf1 (Funayama N et al)
+LPM_BVF <- c("Eomes", "Foxh1", "Mixl1", "Gata4", "Cxcr4", "Bmp4", "Foxf1")
+
+#These are worthless unfortunately: AGM vs Yolk sac PK44 expressed genes: Li et al (Lan ) Cell and Develop Biol 2021 PK44 cells are CD41,CD43, CD45- and EB31, CD201, Kit and CD44+
+Yolk_sac_PK44 <- c("Hspa1b","Hspa1a", "Lyve1", "Lum", "Stab2", "GM6654", "Ubb", "Ptbp1", "Rpl5", "Rpl35", "Maf", "Aplnr", "8430408G22Rik", "Malat1", "GM6251", "Col1a2", "Eef2", "Hsp90abl", "Col3a1")
+AGM_PK44 <- c("Adarb2", "Adamts13", "Gm12657", "Gm2070", "Mrgpra6", "E030024N20Rik", "Rps15a-ps6", "Gm10012", "Cxcr2", "Gm6402", "Gm15645", "Gm15421", "H3f3a", "Actg1", "Idi1", "Rbm3", "Rn45s", "Ppia", "Gm11517")
+
+#Zhao and Choi LPM to mesenchyme(SM) or hematopoietic mESC Development '19 from gene set score list for LPM
+Lateral_plate_Choi <- c("Ahnak", "Ndufa4l2", "Gata6", "Cfc1","Cxcr4", "Gata3", "Pdlim3", "Myl4", "Msx1", "Slc38a4",
+                        "Asb4", "Fgf3", "Gpc3", "Hmga2", "Lmo2",  "Dkk1", "Zfp703", "Msx2", "Foxf1", "Hand1",
+                        "Bambi", "Ppic", "Amot", "Vstm2b" , "Fgf10", "Bmp4", "Nrp1", "Kdr", "Tbx3", "Pmp22",
+                        "Rgs5", "Tgfb2", "Tbx20", "Tgfb3", "Bmp2", "Dusp2")
