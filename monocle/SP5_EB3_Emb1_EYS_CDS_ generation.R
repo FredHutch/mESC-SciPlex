@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
   library(monocle3)
   library(forcats)
   library(pheatmap)
-  setwd("/Users/hadlandlab/Desktop/sciPlex_HSC3_Paper")
+  setwd("/Users/adamheck/Desktop/mESC-SciPlex")
   
   DelayedArray:::set_verbose_block_processing(TRUE)
   options(DelayedArray.block.size=1000e7)})
@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 #In this hashTable all cells are the same axis (1) and the same sample (sciChem_HSC_3)
 #count is column indicating how many RNAs in that cell, oligo designates a particular group
 hashTable1 = 
-  read.table(file = "/Users/hadlandlab/Desktop/sciPlex_HSC3_3/hashTable.out",
+  read.table(file = "/Users/adamheck/Desktop/mESC-SciPlex/processed_data/Sanjay_files/hashTable.out",
              sep = "\t",
              header = F,
              col.names = c("sample", "Cell", "Oligo", "axis", "Count"))
@@ -91,7 +91,7 @@ hash_df = data.frame(
 
 #Add Sanjay's cds sent via dropbox to Rsession
 SP_cds = 
-  readRDS("/Users/hadlandlab/Desktop/sciPlex_HSC3_3/cds.RDS")
+  readRDS("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/Sanjay_files/cds.RDS")
 #view coldata - SP_cds contains 4 columns in coldata Cell (names cell), Sample (all sciChem_HSC_3), Size_Factor, n.umi
 coldata_SP_cds = colData(SP_cds) %>% as_tibble()
 
@@ -338,13 +338,21 @@ EYS_cells_to_keep =
 EYS_cds = Emb1_cds[, EYS_cells_to_keep]
 coldata_EYS_cds = colData(EYS_cds) %>% as_tibble()
 
+#Load Barb's previous analysis to compare
+Barb_SP5_cds = 
+  readRDS("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/BVF_CDS/SP5.RDS")
+
+
 ####PROCESS AND CLUSTER CDS####
 # Process for EB combined with Embryo cds
 SP5_cds <- preprocess_cds(SP5_cds, num_dim = 50) #120 is num_dim for 12-2-20 subset data and most day_cds
 SP5_cds <- reduce_dimension(SP5_cds, umap.n_neighbors = 4L) #10L for 12-2-20 subset and most day_cds but lower no. makes closer together. Used 4L for EB_cds
-SP5_cds <- cluster_cells(SP5_cds, resolution = 3e-4) #Resolution - Lower no, fewer clusters - used 3e-3 for 12-2-20 subset data - used 3e-4 for cds
-plot_cells(SP5_cds) 
-ggsave("PLOTS/SP5_cluster.tiff", height = 4, width = 4, dpi = 300, bg = "transparent")
+set.seed (17)
+SP5_cds <- cluster_cells(SP5_cds, resolution = 3e-4, random_seed = 17) #Resolution - Lower no, fewer clusters - used 3e-3 for 12-2-20 subset data - used 3e-4 for cds
+plot_cells(SP5_cds)
+plot_cells(EB3_cds)
+plot_cells(Barb_SP5_cds)
+ggsave("results/PLOTS/SP5_cluster.tiff", height = 6, width = 6, dpi = 300, bg = "transparent")
 plot_cells(SP5_cds) +
   facet_wrap(~data_set + ~part, ncol = 2)
 ggsave("PLOTS/SP5_parts_cluster.tiff", height = 4, width = 4, dpi = 300, bg = "transparent")
@@ -365,8 +373,10 @@ colData(EB3_cds)$umap1 = reducedDim(EB3_cds, type = "UMAP")[,1]
 colData(EB3_cds)$umap2 = reducedDim(EB3_cds, type = "UMAP")[,2]
 colData(EB3_cds)$Cluster = clusters(EB3_cds, reduction_method = "UMAP")
 
-# Process EB cds without set seed
-EB2_cds <- cluster_cells(EB2_cds, resolution = 3.6e-4) #Resolution - Lower no, fewer clusters - used 3e-3 for 12-2-20 subset data - used 3e-4 for cds
+#Simple plot
+ggsave("results/PLOTS/EB3_cluster.tiff", height = 6, width = 6, dpi = 300, bg = "transparent")
+plot_cells(EB3_cds) +
+  facet_wrap(~data_set + ~part, ncol = 2)
 
 plot_cells(EB3_cds,
            color_cells_by = "cluster",
@@ -535,15 +545,13 @@ facet_wrap(~sm + part + stage, ncol = 3)
 facet_wrap(part, ncol = 2)
 ####Load and or save cds data frames####
 #Save SP5_cds: has both EB and Embryo data
-saveRDS(object = SP5_cds, file = "SP5.RDS")
+saveRDS(SP5_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "SP5.RDS"))
 #Save EB2_cds: has only EB data
-saveRDS(object = EB2_cds, file = "EB2.RDS")
+saveRDS(EB3_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "EB3.RDS"))
 #Save EYS_cds
-saveRDS(object = EYS_cds, file="EYS.RDS")
+saveRDS(EYS_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "EYS.RDS"))
 #Save Emb1_cds
-saveRDS(object = Emb1_cds, file="Emb1.RDS")
-#Save subsetted EB mesoderm mesenchyme cds
-saveRDS(object = EB_M_M_cds, file="EB_M_M.RDS")
+saveRDS(Emb1_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "Emb1.RDS"))
 #load SP5_cds
 SP5_cds =
   readRDS("/Users/hadlandlab/Desktop/sciPlex_HSC3_Paper/SP5.RDS")

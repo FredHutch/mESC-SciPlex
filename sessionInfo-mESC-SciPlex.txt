@@ -1,0 +1,84 @@
+R version 4.1.1 (2021-08-10)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS 13.2.1
+
+Matrix products: default
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] splines   stats4    stats     graphics  grDevices utils     datasets  methods  
+[9] base     
+
+other attached packages:
+ [1] RColorBrewer_1.1-3          org.Mm.eg.db_3.14.0        
+ [3] scales_1.2.1                ggpubr_0.6.0               
+ [5] mygene_1.30.0               GenomicFeatures_1.46.5     
+ [7] AnnotationDbi_1.56.2        magrittr_2.0.3             
+ [9] viridis_0.6.4               viridisLite_0.4.2          
+[11] VGAM_1.1-9                  reticulate_1.32.0          
+[13] Rcpp_1.0.11                 pheatmap_1.0.12            
+[15] monocle3_1.3.4              SingleCellExperiment_1.16.0
+[17] SummarizedExperiment_1.24.0 GenomicRanges_1.46.1       
+[19] GenomeInfoDb_1.30.1         IRanges_2.28.0             
+[21] S4Vectors_0.32.4            MatrixGenerics_1.6.0       
+[23] matrixStats_1.0.0           Biobase_2.54.0             
+[25] BiocGenerics_0.40.0         lubridate_1.9.3            
+[27] forcats_1.0.0               purrr_1.0.2                
+[29] readr_2.1.4                 tibble_3.2.1               
+[31] tidyverse_2.0.0             Matrix_1.6-1.1             
+[33] stringr_1.5.0               ggplot2_3.4.3              
+[35] dplyr_1.1.3                 tidyr_1.3.0                
+[37] rlang_1.1.1                
+
+loaded via a namespace (and not attached):
+  [1] utf8_1.2.3                proto_1.0.0               tidyselect_1.2.0         
+  [4] lme4_1.1-34               RSQLite_2.3.1             htmlwidgets_1.6.2        
+  [7] grid_4.1.1                BiocParallel_1.28.3       devtools_2.4.5           
+ [10] munsell_0.5.0             ragg_1.2.5                codetools_0.2-19         
+ [13] chron_2.3-61              future_1.33.0             miniUI_0.1.1.1           
+ [16] withr_2.5.1               colorspace_2.1-0          filelock_1.0.2           
+ [19] knitr_1.44                rstudioapi_0.15.0         ggsignif_0.6.4           
+ [22] listenv_0.9.0             labeling_0.4.3            GenomeInfoDbData_1.2.7   
+ [25] farver_2.1.1              bit64_4.0.5               rprojroot_2.0.3          
+ [28] parallelly_1.36.0         vctrs_0.6.3               generics_0.1.3           
+ [31] xfun_0.40                 timechange_0.2.0          BiocFileCache_2.2.1      
+ [34] R6_2.5.1                  bitops_1.0-7              cachem_1.0.8             
+ [37] DelayedArray_0.20.0       assertthat_0.2.1          promises_1.2.1           
+ [40] BiocIO_1.4.0              nnet_7.3-19               gtable_0.3.4             
+ [43] globals_0.16.2            processx_3.8.2            systemfonts_1.0.4        
+ [46] rtracklayer_1.54.0        rstatix_0.7.2             broom_1.0.5              
+ [49] checkmate_2.3.1           BiocManager_1.30.22       yaml_2.3.7               
+ [52] reshape2_1.4.4            abind_1.4-5               backports_1.4.1          
+ [55] httpuv_1.6.11             Hmisc_5.1-1               usethis_2.2.2            
+ [58] tools_4.1.1               ellipsis_0.3.2            sessioninfo_1.2.2        
+ [61] gsubfn_0.7                plyr_1.8.9                sparseMatrixStats_1.6.0  
+ [64] base64enc_0.1-3           progress_1.2.2            zlibbioc_1.40.0          
+ [67] RCurl_1.98-1.12           ps_1.7.5                  prettyunits_1.2.0        
+ [70] rpart_4.1.19              sqldf_0.4-11              urlchecker_1.0.1         
+ [73] ggrepel_0.9.3             cluster_2.1.4             fs_1.6.3                 
+ [76] data.table_1.14.8         pkgload_1.3.3             hms_1.1.3                
+ [79] mime_0.12                 evaluate_0.22             xtable_1.8-4             
+ [82] XML_3.99-0.14             gridExtra_2.3             compiler_4.1.1           
+ [85] biomaRt_2.50.3            crayon_1.5.2              minqa_1.2.6              
+ [88] htmltools_0.5.6           later_1.3.1               tzdb_0.4.0               
+ [91] Formula_1.2-5             DBI_1.1.3                 dbplyr_2.3.4             
+ [94] MASS_7.3-60               rappdirs_0.3.3            boot_1.3-28.1            
+ [97] leidenbase_0.1.25         car_3.1-2                 cli_3.6.1                
+[100] parallel_4.1.1            igraph_1.5.1              pkgconfig_2.0.3          
+[103] GenomicAlignments_1.30.0  foreign_0.8-85            terra_1.7-29             
+[106] xml2_1.3.5                XVector_0.34.0            callr_3.7.3              
+[109] digest_0.6.33             RcppAnnoy_0.0.21          Biostrings_2.62.0        
+[112] rmarkdown_2.25            htmlTable_2.4.2           uwot_0.1.16              
+[115] DelayedMatrixStats_1.16.0 restfulr_0.0.15           curl_5.1.0               
+[118] shiny_1.7.5               Rsamtools_2.10.0          rjson_0.2.21             
+[121] nloptr_2.0.3              lifecycle_1.0.3           nlme_3.1-163             
+[124] jsonlite_1.8.7            carData_3.0-5             desc_1.4.2               
+[127] fansi_1.0.4               pillar_1.9.0              lattice_0.21-9           
+[130] KEGGREST_1.34.0           fastmap_1.1.1             httr_1.4.7               
+[133] pkgbuild_1.4.2            glue_1.6.2                remotes_2.4.2.1          
+[136] png_0.1-8                 bit_4.0.5                 stringi_1.7.12           
+[139] profvis_0.3.8             blob_1.2.4                textshaping_0.3.6        
+[142] memoise_2.0.1             irlba_2.3.5.1            
