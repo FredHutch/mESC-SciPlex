@@ -12,6 +12,7 @@ suppressPackageStartupMessages({
   library(forcats)
   library(pheatmap)
   library(RColorBrewer)
+  library(reshape2)
 #Brandon loads also  
   library(tibble)
   library(Rcpp)
@@ -355,13 +356,24 @@ plot_cells(EB3_cds,
            label_leaves = T,
            graph_label_size = 0.1,
            cell_size = 0.2) +
-  theme(legend.position = "none")+
+  theme(legend.position = "none") +
   theme(panel.border = element_rect(fill = NA, color = "black"),
         strip.background = element_blank(),
         strip.text = element_blank(),
         text = element_text(size=10)) 
 
 ggsave("FIG1B_EB_cds_cluster.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+
+#### Plot Hbb-bh1 expression for subpanel figure
+plot_cells(EB3_cds, genes = c("Hbb-bh1"), color_cells_by = "cluster",
+           label_cell_groups = FALSE,
+           show_trajectory_graph = FALSE,
+           label_branch_points = FALSE,
+           label_leaves = FALSE,
+           graph_label_size = 0.75,
+           cell_size = 0.5)
+
+ggsave("FIGS4_Hbb-bh1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #### Generate a heat maps to designate a cell types to a cluster (Supplemental Figure?)#######
 #load RColorBrewer
@@ -547,7 +559,7 @@ plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_b
                               "Red", "Orange", "Turquoise", "SkyBlue",
                               "SlateBlue", "Yellow", "Orchid", "LightSteelBlue",
                               "SlateGray", "PeachPuff")) +
-     
+  facet_wrap(~condition, nrow = 4) +    
   theme(legend.position = "right",
         legend.direction = "vertical",
         legend.title = element_blank(),
@@ -560,7 +572,34 @@ plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_b
 
 ggsave("FIG1C-EB_cds_assigned_cell_types_FULL.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
-facet_grid(Activin~BMP)
+#plot cells for cell type by Activin/BMP conditions
+######Reorder condition as factor levels so it will plot in the correct order (this should be moved up front during preprocessing for final script)
+# Extract colData
+cds_colData <- colData(EB3_assigned_cell_type_cds)
+# Reorder the 'condition' factor levels
+cds_colData$condition <- factor(cds_colData$condition, levels = as.character(1:16))
+# Replace the colData in the cds
+colData(EB3_assigned_cell_type_cds) <- cds_colData
+
+plot_cells(EBtest, group_cells_by = "cluster", color_cells_by = "assigned_cell_type", show_trajectory_graph = F, label_cell_groups = F,
+           group_label_size = 4.5, label_groups_by_cluster =F, label_branch_points = F, label_roots = F, label_leaves = F,
+           graph_label_size = 0.1, cell_size = 0.2) +
+  
+  scale_color_manual(values=c("Pink", "Maroon", "Peru", "#877700", "Khaki",
+                              "Red", "Orange", "Turquoise", "SkyBlue",
+                              "SlateBlue", "Yellow", "Orchid", "LightSteelBlue",
+                              "SlateGray", "PeachPuff")) +
+  facet_wrap(~condition, nrow = 4, dir = "v") +
+  theme(legend.position = "right",
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_blank(),
+        legend.background = element_rect(color = "transparent", fill = "transparent", linetype=0)) +
+  theme(panel.border = element_blank(),
+        strip.background = element_blank() ,
+        strip.text = element_blank())
+
+ggsave("FIGS4-EB_cds_assigned_cell_types_ActivinBMP-gradient.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 ####Filter assigned cell type cds by day for figure 2#####
 #Day4
 EB3_assigned_cell_type_D4_cells_to_keep =
@@ -683,9 +722,20 @@ dfPaper_1 = dfPaper %>%
   spread(key = gene_short_name, value = expression, fill = 0)
 
 ####FILTER EXPRESSION LEVELS DATAFRAME to SUBSET DATAFRAME#####
-#Figure2
+###Ones actually used in paper thus far
 #Primitive streak
-dfPS_T =dfPaper_1 %>% filter(T>0.1)
+dfPS_T = dfPaper_1 %>% filter(T>0.1)
+#LPM
+dfLPM_Pdgfra_Kdr = dfPaper_1 %>% filter(Pdgfra>0.1 & Kdr>0.1)
+dfLPM_Pdgfra_Kdr_neg = dfPaper_1 %>% filter(Pdgfra>0.1 & Kdr<0.1)
+#Vascular mesoderm
+dfHE_Kdr_Etv2_Cdh5neg = dfPaper_1 %>% filter(Kdr>0.2 & Etv2>0.1 & Cdh5<0.1)
+#Immature HE
+dfHE_Kdr_Etv2_Cdh5 = dfPaper_1 %>% filter(Kdr>0.2 & Etv2>0.1 & Cdh5>0.1)
+#Mature HE
+dfHE_Kdr_Cdh5_Etv2neg = dfPaper_1 %>% filter(Kdr>0.2 & Etv2<0.1 & Cdh5>0.1)
+#Mature arterial HE
+dfHE_Kdr_Etv2_Cdh5_Dll4 = dfPaper_1 %>% filter(Kdr>0.2 & Etv2<0.1 & Cdh5>0.1 & Dll4>0.1)
 #mesoderm
 dfMixl1_Kdr = dfPaper_1 %>% filter(Mixl1>0.1 & Kdr>0.1)
 #LPM
@@ -746,45 +796,50 @@ dfRA_Arrb1_Arrb2_Kdr = dfPaper_1 %>% filter(Arrb1>0.1 & Arrb2>0.1 & Kdr>0.1)
 library(WriteXLS)
 WriteXLS("dfAEC_Lyve1_Cdh5", ExcelFileName = "dfAEC_Lyve1_Cdh5.xlsx")
 
-####PLOT df COLOR BY DAY of genes expressed single or 4x4 ####
-#will not plot concentrations as 4x4 progression if do not do following - should be top df
-dfLPM_Pdgfra_Kdr$condition <- factor(dfLPM_Pdgfra_Kdr$condition,
-                                 levels=c("1","5","9","13",
-                                          "2", "6","10","14",
-                                          "3","7","11","15",
-                                          "4","8","12","16")) 
-#top
-ggplot (data=dfLPM_Pdgfra_Kdr, mapping = aes(x=umap1, y=umap2, color = day, size = Pdgfra)) +
-  scale_size_continuous(range = c(0.5, 0.5)) +
-  scale_color_manual(values = c("4" = "#D41159",
-                                "5" = "#0C7BDC",
-                                "6" = "#FFC20A")) + geom_jitter() +
-#bottom
-  geom_point(data=dfPaper_1, aes(umap1, umap2), color = "gray", size = 0.05, alpha = 0.8) + geom_jitter() +
+####PLOT df COLOR BY DAY of genes expressed single
+####Plots for Figure 3 and Figure S5
+#For loop to run graph generation
+list_of_datasets <- list(dfPS_T,dfLPM_Pdgfra_Kdr,dfLPM_Pdgfra_Kdr_neg,dfHE_Kdr_Etv2_Cdh5neg,dfHE_Kdr_Etv2_Cdh5,dfHE_Kdr_Cdh5_Etv2neg,dfHE_Kdr_Etv2_Cdh5_Dll4)
+names(list_of_datasets) <- c("Brachyury+","Pdgfra+_Kdr+", "Pgfra+_Kdr-","Kdr+_Etv2+_Cdh5-","Kdr+_Etv2+_Cdh5+","Kdr+_Cdh5+_Etv2-","Kdr+_Cdh5+_Dll4+_Etv2-")
+# Loop through each dataset
+for (dataset_name in names(list_of_datasets)) {
+  # Extract the dataset from the list
+  dataset <- list_of_datasets[[dataset_name]]
   
-#add facet wrap here if want 4x4
-  facet_wrap(~condition, nrow = 4) +  
-  theme(plot.title=element_text(hjust=0.5, face='bold', color = 'black', size = 10)) +
-  theme(legend.position = "none") +
-  theme(panel.border = element_blank(),
-        panel.background = element_rect(fill = "transparent"),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_blank(),
-        axis.line.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.line.y = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank()) +
-  no_axes()
-ggsave("PLOTS/Fig2_Pdgfra_Kdr-neg_4x4.tiff", height = 3, width = 3, dpi = 300, bg = "transparent")
-
-facet_wrap(~condition, nrow = 4)
+  # Create the plot using ggplot2
+  p <- ggplot(data=dataset, mapping = aes(x=umap1, y=umap2, color = day)) +
+    scale_size_continuous(range = c(0.2, 0.2)) +
+    scale_color_manual(values = c("4" = "#D41159",
+                                  "5" = "#0C7BDC",
+                                  "6" = "#FFC20A")) + geom_jitter() +
+    #bottom
+    geom_point(data=dfPaper_1, aes(umap1, umap2), color = "gray", size = 0.05, alpha = 0.8) + geom_jitter() +
+    
+    #add facet wrap here if want 4x4
+    #facet_wrap(~condition, nrow = 4) +  
+    theme(plot.title=element_text(hjust=0.5, face='bold', color = 'black', size = 10)) +
+    theme(legend.position = "right") +
+    theme(panel.border = element_blank(),
+          panel.background = element_rect(fill = "transparent"),
+          plot.background = element_rect(fill = "white", color = "white"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          strip.background = element_blank(),
+          strip.text.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.line.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank()) +
+    ggtitle(paste("Plot for", dataset_name)) +
+    no_axes()
+  
+  # Save the plot
+  ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 6, height = 6, dpi = 300, bg = "transparent")
+}
 
 ####Subset Paper_1 according to cell type####
  
@@ -813,12 +868,61 @@ dfPaper_2 <- dfPaper_1 %>%
 dfPaper_3 <- dfPaper_1 %>% 
   group_by (condition, assigned_cell_type, day, .drop = F) %>% 
   dplyr::summarise (number_condition=dplyr::n()) %>% 
-  dplyr::ungroup() 
+  dplyr::ungroup()
+
+#Making a heatmap for each day looking at cell type and condition
+df <- dfPaper_3
+#Split into single day dataframes
+day4_df <- df[df$day == '4', ]
+day5_df <- df[df$day == '5', ]
+day6_df <- df[df$day == '6', ]
+
+####For loop to genereate heatmaps
+list_of_datasets <- list(day4_df,day5_df,day6_df)
+names(list_of_datasets) <- c("Day4_celltype_heatmap","Day5_celltype_heatmap", "Day6_celltype_heatmap")
+# Manually define the desired order for rows and columns
+desired_row_order <- c("Epiblast", "Primitive streak", "Endoderm","Visceral endoderm","Ectoderm","Mesoderm","HE/Endothelial","Blood progenitors","Erythroid","Mesenchyme","Exe_mesoderm/Allantois","Cardiomyocytes","PGC") # Replace with actual row names
+desired_col_order <- c("1","5","9","13","2","6","10","14","3","7","11","15","4","8","12","16") # Replace with actual column names
+#Manually set the scale of the heatmap
+breaks <- seq(0, 1400, by = 1)  # Adjust the 'by' value as needed for finer or coarser color transitions
+#Creat the color palette you want
+color_palette <- colorRampPalette(c("tan", "blue", "green","yellow"))(length(breaks) - 1)
+# Loop through each dataset
+for (dataset_name in names(list_of_datasets)) {
+  # Extract the dataset from the list
+  dataset <- list_of_datasets[[dataset_name]]
+  
+  # Remove day column
+  dataset <- dataset[, !colnames(dataset) %in% 'day']
+  #Reorganize the data frame
+  data_matrix <- dcast(dataset, assigned_cell_type ~ condition, value.var = "number_condition")
+  #Remove N/A values and make the cell types rownames
+  data_matrix[is.na(data_matrix)] <- 0
+  rownames(data_matrix) <- data_matrix[,1]
+  data_matrix <- data_matrix[,-1]
+  #Reorder rows and columns
+  data_matrix <- data_matrix[desired_row_order, desired_col_order]
+  #Create heatmaps
+  p <- pheatmap(data_matrix,
+           scale = "none", # No scaling, use raw cell numbers
+           cluster_cols = FALSE,
+           cluster_rows = FALSE,
+           clustering_method = "complete",
+           color = color_palette,
+           breaks = breaks,
+           annotation_legend = TRUE
+  )
+  #Save image
+  ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 6, dpi = 300)
+}
+
 
 ####Write dataframe to Excel (plot with prism so all figures match####
 install.packages("WriteXLS")
 library(WriteXLS)
 WriteXLS("dfPaper_2", ExcelFileName = "Condition_Day_dfPaper2.xlsx")
+
+WriteXLS("dfPaper_3", ExcelFileName = "Celltype_Condition_Day.xlsx")
 
 ####If plots are no longer plotting try####
 dev.off()
