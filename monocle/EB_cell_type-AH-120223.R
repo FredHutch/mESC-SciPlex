@@ -29,7 +29,7 @@ suppressPackageStartupMessages({
   DelayedArray:::set_verbose_block_processing(TRUE)
   options(DelayedArray.block.size=1000e7)})
 
-writeLines(capture.output(sessionInfo()), "sessionInfo-mESC-SciPlex.txt")
+writeLines(capture.output(sessionInfo()), "sessionInfo-mESC-SciPlex_Celltyping.txt")
 # Set project directory
 projectdir <- "/Users/adamheck/Desktop/mESC-SciPlex"
 inputdir <- paste(projectdir, "processed_data/AH_CDS_122023", sep = "/")
@@ -375,6 +375,16 @@ plot_cells(EB3_cds, genes = c("Hbb-bh1"), color_cells_by = "cluster",
 
 ggsave("FIGS4_Hbb-bh1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
+#Plot Aldh1a2 experssion
+plot_cells(EB3_cds, genes = c("Aldh1a2"), color_cells_by = "cluster",
+           label_cell_groups = FALSE,
+           show_trajectory_graph = FALSE,
+           label_branch_points = FALSE,
+           label_leaves = FALSE,
+           graph_label_size = 0.75,
+           cell_size = 0.5)
+ggsave("FIGS7_Aldh1a2_EB_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+
 #### Generate a heat maps to designate a cell types to a cluster (Supplemental Figure?)#######
 #load RColorBrewer
 library(RColorBrewer)
@@ -559,7 +569,7 @@ plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_b
                               "Red", "Orange", "Turquoise", "SkyBlue",
                               "SlateBlue", "Yellow", "Orchid", "LightSteelBlue",
                               "SlateGray", "PeachPuff")) +
-  facet_wrap(~condition, nrow = 4) +    
+  #facet_wrap(~condition, nrow = 4) +    
   theme(legend.position = "right",
         legend.direction = "vertical",
         legend.title = element_blank(),
@@ -581,7 +591,7 @@ cds_colData$condition <- factor(cds_colData$condition, levels = as.character(1:1
 # Replace the colData in the cds
 colData(EB3_assigned_cell_type_cds) <- cds_colData
 
-plot_cells(EBtest, group_cells_by = "cluster", color_cells_by = "assigned_cell_type", show_trajectory_graph = F, label_cell_groups = F,
+plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_by = "assigned_cell_type", show_trajectory_graph = F, label_cell_groups = F,
            group_label_size = 4.5, label_groups_by_cluster =F, label_branch_points = F, label_roots = F, label_leaves = F,
            graph_label_size = 0.1, cell_size = 0.2) +
   
@@ -701,6 +711,7 @@ Paper_genes <- c("Cxcr4", "Cyp26a1", "Cyp26b1", "Aldh1a2", "Rbp1", "Crabp2", "Cr
                  "Dll4", "Notch1", "Dlk1", "Gja5", "Vwf", "Sox17", "Gata4", "Foxf1", "Runx1",
                  "Cd44", "Procr", "Itgb3", "Itgb7", "Trim47", "Cd38", "Lyve1", "Stab2", "Ace")
 Paper_cds <- EB3_assigned_cell_type_cds [rowData(EB3_assigned_cell_type_cds)$gene_short_name %in% Paper_genes,]
+#72832 cells in Paper_cds, 72832 cells in the EB3_assigned_celltype cds, not sure what the filter is for then.
 Paper_exprs <- SingleCellExperiment::counts(Paper_cds)
 #normalize counts
 Paper_exprs <- Matrix::t(Matrix::t(Paper_exprs)/size_factors(Paper_cds))
@@ -849,28 +860,13 @@ for (dataset_name in names(list_of_datasets)) {
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
-dfPaper_2 <- dfPaper_1
-####Following replaces NaN with 0 must run code above is.nan.data.frame etc before this can work
-dfPaper_2[is.nan(dfPaper_2)] <- 0     
-
-dfPaper_2 <- dfPaper_1 %>% 
-  group_by (condition, day, .drop = F) %>% 
-  dplyr::summarise (number_condition=dplyr::n(),
-                    Pdgfra_Kdr_no=sum(Pdgfra>0.1 & Kdr>0.1), Pdgfra_Kdr_ratio = Pdgfra_Kdr_no/dplyr::n(), Pdgfra_Kdr_percent= Pdgfra_Kdr_ratio * 100,
-                    Pdgfra_Kdr_neg_no=sum(Pdgfra>0.1 & Kdr<0.1), Pdgfra_Kdr_neg_ratio = Pdgfra_Kdr_neg_no/dplyr::n(), Pdgfra_Kdr_neg_percent= Pdgfra_Kdr_neg_ratio * 100,
-                    Etv2_Kdr_Cdh5_no=sum(Cdh5>0.1 & Etv2>0.1 & Kdr>0.1), Etv2_Kdr_Cdh5_ratio = Etv2_Kdr_Cdh5_no/dplyr::n(), Etv2_Kdr_Cdh5_percent= Etv2_Kdr_Cdh5_ratio * 100,
-                    Etv2_Kdr_no=sum( Etv2>0.1 & Kdr>0.1), Etv2_Kdr_ratio = Etv2_Kdr_no/dplyr::n(), Etv2_Kdr_percent= Etv2_Kdr_ratio * 100,
-                    Kdr_Cxcr4_Mixl1_no=sum(Kdr>0.1 & Cxcr4 >0.1 & Mixl1 >0.1), Kdr_Cxcr4_Mixl1_ratio = Kdr_Cxcr4_Mixl1_no/dplyr::n(), EKdr_Cxcr4_Mixl1_percent= Kdr_Cxcr4_Mixl1_ratio * 100,
-                    Cdh5_Dll4_Kdr_no=sum(Kdr>0.1 & Cdh5>0.1 & Dll4>0.1), Cdh5_Dll4_Kdr_ratio = Cdh5_Dll4_Kdr_no/dplyr::n(), Cdh5_Dll4_Kdr_percent= Cdh5_Dll4_Kdr_ratio * 100) %>% 
-  dplyr::ungroup()
-
 ####Number  of cells / condition & assigned cell type - made heat map in prism####
 dfPaper_3 <- dfPaper_1 %>% 
   group_by (condition, assigned_cell_type, day, .drop = F) %>% 
   dplyr::summarise (number_condition=dplyr::n()) %>% 
   dplyr::ungroup()
 
-#Making a heatmap for each day looking at cell type and condition
+##############FIGURE 1D Making a heatmap for each day looking at cell type and condition#############
 df <- dfPaper_3
 #Split into single day dataframes
 day4_df <- df[df$day == '4', ]
@@ -886,7 +882,7 @@ desired_col_order <- c("1","5","9","13","2","6","10","14","3","7","11","15","4",
 #Manually set the scale of the heatmap
 breaks <- seq(0, 1400, by = 1)  # Adjust the 'by' value as needed for finer or coarser color transitions
 #Creat the color palette you want
-color_palette <- colorRampPalette(c("tan", "blue", "green","yellow"))(length(breaks) - 1)
+color_palette <- colorRampPalette(c("grey80", "blue", "green","yellow"))(length(breaks) - 1)
 # Loop through each dataset
 for (dataset_name in names(list_of_datasets)) {
   # Extract the dataset from the list
@@ -917,12 +913,134 @@ for (dataset_name in names(list_of_datasets)) {
 }
 
 
-####Write dataframe to Excel (plot with prism so all figures match####
-install.packages("WriteXLS")
-library(WriteXLS)
-WriteXLS("dfPaper_2", ExcelFileName = "Condition_Day_dfPaper2.xlsx")
+##############FIGURE XXXX Making a heatmap for each day looking at cell type and condition#############
+##KDR,Flk,T,Meso celltypes
+df <- dfPaper_1
+#Following replaces NaN with 0
+df[is.nan(df)] <- 0     
 
-WriteXLS("dfPaper_3", ExcelFileName = "Celltype_Condition_Day.xlsx")
+df <- dfPaper_1 %>% 
+  group_by(condition, day, .drop = F) %>% 
+  dplyr::summarise(
+    number_condition = dplyr::n(),
+    Pdgfra_Kdr_dp = sum(Pdgfra > 0.1 & Kdr > 0.1),
+    Pdgfra_Kdr_neg = sum(Pdgfra > 0.1 & Kdr < 0.1),
+    Pdgfra_neg_Kdr_pos = sum(Pdgfra < 0.1 & Kdr > 0.1),
+    Kdr_Cdh5_dp = sum(Kdr > 0.1 & Cdh5 > 0.1)
+  ) %>%
+  dplyr::ungroup()
+
+#Split into single day dataframes
+day4_df <- df[df$day == '4', ]
+day5_df <- df[df$day == '5', ]
+day6_df <- df[df$day == '6', ]
+####For loop to genereate MESODERM heatmaps
+list_of_datasets <- list(day4_df,day5_df,day6_df)
+names(list_of_datasets) <- c("Day4_Mesomarker_heatmap","Day5_Mesomarker_heatmap", "Day6_Mesomarker_heatmap")
+#Vector for renaming the rows
+row_name_mapping <- c("1"="C1","2"="C2","3"="C3", "4"="C4","5"="C5","6"="C6","7"="C7","8"="C8","9"="C9","10"="C10","11"="C11","12"="C12","13"="C13","14"="C14","15"="C15","16"="C16")
+# Manually define the desired order for rows and columns
+desired_row_order <- c("Pdgfra_Kdr_neg", "Pdgfra_Kdr_dp", "Pdgfra_neg_Kdr_pos","Kdr_Cdh5_dp") # Replace with actual row names
+desired_col_order <- c("C1","C5","C9","C13","C2","C6","C10","C14","C3","C7","C11","C15","C4","C8","C12","C16") # Replace with actual column names
+#Manually set the scale of the heatmap
+breaks <- seq(0, 1600, by = 1)  # Adjust the 'by' value as needed for finer or coarser color transitions
+#Creat the color palette you want
+color_palette <- colorRampPalette(c("grey80", "blue", "green","yellow"))(length(breaks) - 1)
+# Loop through each dataset
+for (dataset_name in names(list_of_datasets)) {
+  # Extract the dataset from the list
+  dataset <- list_of_datasets[[dataset_name]]
+  # Change condition to the rowname
+  dataset <- dataset[, -which(names(dataset) == "condition")]
+  # Remove day column
+  dataset <- dataset[, !colnames(dataset) %in% 'day']
+  # Remove total number column
+  dataset <- dataset[, !colnames(dataset) %in% 'number_condition']
+  # Rename rownames
+  rownames(dataset) <- row_name_mapping[as.character(rownames(dataset))]
+  #Transpose the data
+  dataset <- t(dataset)
+  #Re-order for heatmap
+  dataset <- dataset[desired_row_order, desired_col_order]
+  #Plot heatmap
+  p <- pheatmap(dataset,
+                scale = "none", # No scaling, use raw cell numbers
+                cluster_cols = FALSE,
+                cluster_rows = FALSE,
+                clustering_method = "complete",
+                color = color_palette,
+                breaks = breaks,
+                annotation_legend = TRUE
+  )
+  #Save image
+  ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300)
+}
+
+##Kdr,Etv2,Cdh5 Endothelial celltypes
+df <- dfPaper_1
+#Following replaces NaN with 0
+df[is.nan(df)] <- 0     
+
+df <- dfPaper_1 %>% 
+  group_by(condition, day, .drop = F) %>% 
+  dplyr::summarise(
+    number_condition = dplyr::n(),
+    VascMeso = sum(Etv2 > 0.1 & Kdr > 0.1 & Cdh5 < 0.1),
+    ImmatHE = sum(Etv2 > 0.1 & Kdr > 0.1 & Cdh5 > 0.1),
+    MatureHE = sum(Etv2 < 0.1 & Kdr > 0.1 & Cdh5 > 0.1),
+    ArterHE = sum(Etv2 < 0.1 & Kdr > 0.1 & Cdh5 > 0.1 & Dll4 > 0.1)
+  ) %>%
+  dplyr::ungroup()
+
+#Split into single day dataframes
+day4_df <- df[df$day == '4', ]
+day5_df <- df[df$day == '5', ]
+day6_df <- df[df$day == '6', ]
+####For loop to genereate MESODERM heatmaps
+list_of_datasets <- list(day4_df,day5_df,day6_df)
+names(list_of_datasets) <- c("Day4_Endothelial_heatmap","Day5_Endothelial_heatmap", "Day6_Endothelial_heatmap")
+#Vector for renaming the rows
+row_name_mapping <- c("1"="C1","2"="C2","3"="C3", "4"="C4","5"="C5","6"="C6","7"="C7","8"="C8","9"="C9","10"="C10","11"="C11","12"="C12","13"="C13","14"="C14","15"="C15","16"="C16")
+# Manually define the desired order for rows and columns
+desired_row_order <- c("VascMeso", "ImmatHE", "MatureHE","ArterHE") # Replace with actual row names
+desired_col_order <- c("C1","C5","C9","C13","C2","C6","C10","C14","C3","C7","C11","C15","C4","C8","C12","C16") # Replace with actual column names
+#Manually set the scale of the heatmap
+breaks <- seq(0, 600, by = 0.1)  # Adjust the 'by' value as needed for finer or coarser color transitions
+#Creat the color palette you want
+color_palette <- colorRampPalette(c("grey80", "blue", "green","yellow"))(length(breaks) - 1)
+# Loop through each dataset
+for (dataset_name in names(list_of_datasets)) {
+  # Extract the dataset from the list
+  dataset <- list_of_datasets[[dataset_name]]
+  # Change condition to the rowname
+  dataset <- dataset[, -which(names(dataset) == "condition")]
+  # Remove day column
+  dataset <- dataset[, !colnames(dataset) %in% 'day']
+  # Remove total number column
+  dataset <- dataset[, !colnames(dataset) %in% 'number_condition']
+  # Rename rownames
+  rownames(dataset) <- row_name_mapping[as.character(rownames(dataset))]
+  #Transpose the data
+  dataset <- t(dataset)
+  #Re-order for heatmap
+  #dataset <- dataset[desired_row_order, desired_col_order]
+  #Plot heatmap
+  p <- pheatmap(dataset,
+                scale = "none", # No scaling, use raw cell numbers
+                cluster_cols = FALSE,
+                cluster_rows = FALSE,
+                clustering_method = "complete",
+                color = color_palette,
+                breaks = breaks,
+                annotation_legend = TRUE
+  )
+  #Save image
+  ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300)
+}
+
+
+
+
 
 ####If plots are no longer plotting try####
 dev.off()

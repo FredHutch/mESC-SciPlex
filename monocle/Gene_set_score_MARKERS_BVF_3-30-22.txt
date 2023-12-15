@@ -19,7 +19,7 @@ EXE_mesoderm <- c("Hand1", "Col9a1", "Spin2c", "Cdx2", "Cdx4", "Hoxd11")
 Mesenchyme <- c("Tdo2", "Colec11", "Gdf6", "Snai2", "Wisp1", "Ccdc80", "Sdpr", "Lum", "Postn", "Mab21l2")
 
 #Cardiomyocytes
-Cardiomyocytes <- c("Myl7", "Myl4", "Nkx2-5", "Tnnt2", "Mef2c", "Tnnc1", "Sfrp5", "Nexn", "Sh3bgr", "Csrp3", "Gm45123", "Cnn1", "Unc45b", "Ptges3l" )
+Cardiomyocytes <- c("Myl7", "Myl4", "Nkx2-5", "Tnnt2", "Mef2c", "Tnnc1", "Sfrp5", "Nexn", "Sh3bgr", "Csrp3", "Gm45123", "Cnn1", "Unc45b", "Ptges3l")
 
 #other gene lists for LPM
 #Lateral Plate Mesoderm lineage markers Prummel KD Mosimann C 2019 Nature Comm Zebrafish#
