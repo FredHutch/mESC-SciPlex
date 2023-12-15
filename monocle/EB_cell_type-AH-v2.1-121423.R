@@ -95,26 +95,21 @@ plot_cells(EB3_cds,
 
 ggsave("FIG1B_EB_cds_cluster.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
-#### Plot Hbb-bh1 expression for subpanel figure
-plot_cells(EB3_cds, genes = c("Hbb-bh1"), color_cells_by = "cluster",
-           label_cell_groups = FALSE,
-           show_trajectory_graph = FALSE,
-           label_branch_points = FALSE,
-           label_leaves = FALSE,
-           graph_label_size = 0.75,
-           cell_size = 0.5)
+####Plot single gene expression for a given gene
+#Set genes in list
+gene_list <- c("Hbb-bh1", "Aldh1a2", "Rara","Rarb","Rarg")  # Replace with actual gene names
 
-ggsave("FIGS4_Hbb-bh1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
-
-#Plot Aldh1a2 experssion
-plot_cells(EB3_cds, genes = c("Aldh1a2"), color_cells_by = "cluster",
-           label_cell_groups = FALSE,
-           show_trajectory_graph = FALSE,
-           label_branch_points = FALSE,
-           label_leaves = FALSE,
-           graph_label_size = 0.75,
-           cell_size = 0.5)
-ggsave("FIGS7_Aldh1a2_EB_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+for (gene in gene_list) {
+  p <- plot_cells(EB3_cds, genes = gene, color_cells_by = "cluster",
+             label_cell_groups = FALSE,
+             show_trajectory_graph = FALSE,
+             label_branch_points = FALSE,
+             label_leaves = FALSE,
+             graph_label_size = 0.75,
+             cell_size = 0.5)
+  # Save the plot
+  ggsave(filename = paste0(gene, "_exp_full_EBcds.tiff"), plot = p, width = 6, height = 6, dpi = 300, bg = "transparent")
+}
 
 #### Generate a heat maps to designate a cell types to a cluster (Supplemental Figure?)#######
 #load RColorBrewer
@@ -470,14 +465,13 @@ dfLPM_Pdgfra_Kdr = dfPaper_1 %>% filter(Pdgfra>0.1 & Kdr>0.1)
 dfLPM_Pdgfra_Kdr_neg = dfPaper_1 %>% filter(Pdgfra>0.1 & Kdr<0.1)
 dfLPM_Pdgfra_neg_Kdr = dfPaper_1 %>% filter(Pdgfra<0.1 & Kdr>0.1)
 #Vascular mesoderm
-dfHE_Kdr_Etv2_Cdh5neg = dfPaper_1 %>% filter(Kdr>0.2 & Etv2>0.1 & Cdh5<0.1)
+dfHE_Kdr_Etv2_Cdh5neg = dfPaper_1 %>% filter(Kdr>0.1 & Etv2>0.1 & Cdh5<0.1)
 #Immature HE
-dfHE_Kdr_Etv2_Cdh5 = dfPaper_1 %>% filter(Kdr>0.2 & Etv2>0.1 & Cdh5>0.1)
+dfHE_Kdr_Etv2_Cdh5 = dfPaper_1 %>% filter(Kdr>0.1 & Etv2>0.1 & Cdh5>0.1)
 #Mature HE
-dfHE_Kdr_Cdh5_Etv2neg = dfPaper_1 %>% filter(Kdr>0.2 & Etv2<0.1 & Cdh5>0.1)
+dfHE_Kdr_Cdh5_Etv2neg = dfPaper_1 %>% filter(Kdr>0.1 & Etv2<0.1 & Cdh5>0.1)
 #Mature arterial HE
-dfHE_Kdr_Etv2_Cdh5_Dll4 = dfPaper_1 %>% filter(Kdr>0.2 & Etv2<0.1 & Cdh5>0.1 & Dll4>0.1)
-
+dfHE_Kdr_Etv2_Cdh5_Dll4 = dfPaper_1 %>% filter(Kdr>0.1 & Etv2<0.1 & Cdh5>0.1 & Dll4>0.1)
 ####PLOT df COLOR BY DAY of genes expressed
 ####Plots for Figure 3 and Figure S5
 #For loop to run graph generation
@@ -585,7 +579,7 @@ df <- dfPaper_1 %>%
     number_condition = dplyr::n(),
     Pdgfra_Kdr_dp = sum(Pdgfra > 0.1 & Kdr > 0.1),
     Pdgfra_Kdr_neg = sum(Pdgfra > 0.1 & Kdr < 0.1),
-    Kdr_Etv2_dp = sum(Kdr > 0.1 & Etv2 > 0.1) #Put Kdr Etv2 in and remove Kdr Cdh5 b/c we already have that in endothelial figure pretty much>?
+    Kdr_Pdgfra_neg = sum(Pdgfra < 0.1 & Kdr > 0.1) #Put Kdr Etv2 in and remove Kdr Cdh5 b/c we already have that in endothelial figure pretty much>?
   ) %>%
   dplyr::ungroup()
 
@@ -599,10 +593,10 @@ names(list_of_datasets) <- c("Day4_Mesomarker_heatmap","Day5_Mesomarker_heatmap"
 #Vector for renaming the rows
 row_name_mapping <- c("1"="C1","2"="C2","3"="C3", "4"="C4","5"="C5","6"="C6","7"="C7","8"="C8","9"="C9","10"="C10","11"="C11","12"="C12","13"="C13","14"="C14","15"="C15","16"="C16")
 # Manually define the desired order for rows and columns
-desired_row_order <- c("Pdgfra_Kdr_neg", "Pdgfra_Kdr_dp","Kdr_Etv2_dp") # Replace with actual row names
+desired_row_order <- c("Pdgfra_Kdr_neg", "Pdgfra_Kdr_dp","Kdr_Pdgfra_neg") # Replace with actual row names
 desired_col_order <- c("C1","C5","C9","C13","C2","C6","C10","C14","C3","C7","C11","C15","C4","C8","C12","C16") # Replace with actual column names
 #Manually set the scale of the heatmap
-breaks <- seq(0, 175, by = 0.5)  # Adjust the 'by' value as needed for finer or coarser color transitions
+breaks <- seq(0, 1500, by = 0.5)  # Adjust the 'by' value as needed for finer or coarser color transitions
 #Creat the color palette you want
 color_palette <- colorRampPalette(c("grey80", "blue", "green","yellow"))(length(breaks) - 1)
 # Loop through each dataset
@@ -640,6 +634,7 @@ df <- dfPaper_1 %>%
   group_by(condition, day, .drop = F) %>% 
   dplyr::summarise(
     number_condition = dplyr::n(),
+    VascMeso = sum(Etv2 > 0.1 & Kdr > 0.1 & Cdh5 < 0.1),
     ImmatHE = sum(Etv2 > 0.1 & Kdr > 0.1 & Cdh5 > 0.1),
     MatureHE = sum(Etv2 < 0.1 & Kdr > 0.1 & Cdh5 > 0.1),
     ArterHE = sum(Etv2 < 0.1 & Kdr > 0.1 & Cdh5 > 0.1 & Dll4 > 0.1)
@@ -656,7 +651,7 @@ names(list_of_datasets) <- c("Day4_Endothelial_heatmap","Day5_Endothelial_heatma
 #Vector for renaming the rows
 row_name_mapping <- c("1"="C1","2"="C2","3"="C3", "4"="C4","5"="C5","6"="C6","7"="C7","8"="C8","9"="C9","10"="C10","11"="C11","12"="C12","13"="C13","14"="C14","15"="C15","16"="C16")
 # Manually define the desired order for rows and columns
-desired_row_order <- c("ImmatHE", "MatureHE","ArterHE") # Replace with actual row names
+desired_row_order <- c("VascMeso","ImmatHE", "MatureHE","ArterHE") # Replace with actual row names
 desired_col_order <- c("C1","C5","C9","C13","C2","C6","C10","C14","C3","C7","C11","C15","C4","C8","C12","C16") # Replace with actual column names
 #Manually set the scale of the heatmap
 breaks <- seq(0, 600, by = 0.1)  # Adjust the 'by' value as needed for finer or coarser color transitions
@@ -692,12 +687,102 @@ for (dataset_name in names(list_of_datasets)) {
   ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300)
 }
 
+####FIGURE 4 HE/Endothelial subset and marker expression
+#Subset the mesoderm differentiation cells
+endothelial_cells_keep =
+  colData(EB3_assigned_cell_type_cds) %>%
+  as.data.frame() %>% 
+  filter(!is.na(assigned_cell_type),
+         assigned_cell_type %in% c("HE/Endothelial")) %>% 
+  
+  pull(Cell) %>%
+  as.character() 
+endo_sub_cds = EB3_assigned_cell_type_cds[,endothelial_cells_keep]
+#Plot to check the correct cells were subsetted
+plot_cells(endo_sub_cds)
+#Create expression matrix from endo_sub_cds
+endo_cds <- endo_sub_cds [rowData(endo_sub_cds)$gene_short_name %in% Paper_genes,]
+#Create expression matrix
+endo_exprs <- SingleCellExperiment::counts(endo_cds)
+#normalize counts
+endo_exprs <- reshape2::melt(as.matrix(endo_exprs)) 
+colnames(endo_exprs) <- c("f_id", "Cell", "expression")
+#make a matrix that has expression vs short_gene_name and cell and everything else in coldata - very useful!!!!!!
+endo_cds_coldata <- colData(endo_cds)
+#adds coldata info get error if do row data 1st
+endo_exprs <- merge(endo_exprs, endo_cds_coldata, by.x = "Cell", by.y = "row.names")
+#add gene_short_name to dataframe or cds
+#load gene annotations file
+genes = read.table(file = "/Users/adamheck/Desktop/mESC-SciPlex/processed_data/Sanjay_files/gene.annotations", sep = "\t", header = F, col.names = c("f_id", "gene_short_name"))
+#add column with gene short name
+endo_exprs <- merge(endo_exprs, genes, by = "f_id")
+#Create data frame from matrix and add umap cluster condition info  note: SPREAD puts gene_short_name in columns
+dfendo = data.frame(endo_exprs)
+dfendo_1 = dfendo %>% 
+  dplyr::select(Cell,  expression,  gene_short_name, umap1,  umap2, Cluster, condition, day, assigned_cell_type)%>%
+  spread(key = gene_short_name, value = expression, fill = 0)
 
+#Pull out cells based on specific expression
+dfendo_express = dfendo_1 %>% filter(Cdh5>0.1 & Dll4 >0.1)
+dataset <- dfendo_express
 
+# Calculate expression patterns
+dataset$expression_pattern <- ifelse(dataset$Cxcr4 > 0.1 & dataset$Lyve1 > 0.1, "Double Positive",
+                                     ifelse(dataset$Cxcr4 > 0.1 & dataset$Lyve1 <= 0.1, "Cxcr4 Positive",
+                                            ifelse(dataset$Cxcr4 <= 0.1 & dataset$Lyve1 > 0.1, "Lyve1 Positive", "Double Negative")))
+
+# Define color mappings
+color_mapping <- c("Double Positive" = "gray80", "Cxcr4 Positive" = "goldenrod2", "Lyve1 Positive" = "skyblue2", "Double Negative" = "darkorchid4")
+
+# Define the order of levels for the expression_pattern variable
+dataset$expression_pattern <- factor(dataset$expression_pattern, levels = c("Cxcr4 Positive", "Lyve1 Positive", "Double Negative", "Double Positive"))
+
+# Plot the cells in a UMAP space, coloring them based on the expression patterns
+ggplot(data=dataset, mapping = aes(x=umap1, y=umap2, color = expression_pattern, size = 0.5)) +
+  scale_size_continuous(range = c(0.5, 0.5)) +
+  scale_color_manual(values = color_mapping) + 
+  geom_jitter() +
+  #bottom
+  geom_point(data=dfendo, aes(umap1, umap2), color = "gray80", size = 0.1, alpha = 0.8) + geom_jitter() +
+  
+  #add facet wrap here if want 4x4
+  #facet_wrap(~condition, nrow = 4) +  
+  theme(plot.title=element_text(hjust=0.5, face='bold', color = 'black', size = 10)) +
+  theme(legend.position = "right") +
+  theme(panel.border = element_blank(),
+        panel.background = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "white", color = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.line.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.key = element_rect(fill = "white")) +  # Set the background color of the legend keys to white
+  ggtitle(paste("Plot for", dataset_name)) +
+  no_axes()
+
+ggsave("FIG4B-VECad_Dll4_cells_Cxcr4Lyve1_exp.tiff", width = 6, height = 4, dpi = 300, bg = "white")
 
 
 ####If plots are no longer plotting try####
 dev.off()
+
+
+
+
+
+
+
+
+
+
 
 
 

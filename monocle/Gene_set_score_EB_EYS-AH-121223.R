@@ -101,39 +101,31 @@ white_theme =
           strip.background = element_blank(),
           strip.text.x = element_text(color = "white"))}
 setwd(plotdir)
+####Plot single gene expression in Embryo/Yolk Sac for a given gene
+#Set genes in list
+gene_list <- c("Kdr", "Cdh5","Aldh1a2","Runx1","Rara","Rarb","Rarg","Hbb-bh1")  # Replace with actual gene names
 
-plot_cells(EYS_cds)
-plot_cells(EYS_cds, color_cells_by = "part")
-plot_cells(EYS_cds, genes = c("Runx1"), color_cells_by = "cluster",
+for (gene in gene_list) {
+  p <- plot_cells(EYS_cds, genes = gene, color_cells_by = "cluster",
+                  label_cell_groups = FALSE,
+                  show_trajectory_graph = FALSE,
+                  label_branch_points = FALSE,
+                  label_leaves = FALSE,
+                  graph_label_size = 0.75,
+                  cell_size = 0.75)
+  # Save the plot
+  ggsave(filename = paste0(gene, "_exp_full_EmbryoYolkSac.tiff"), plot = p, width = 6, height = 6, dpi = 300, bg = "transparent")
+}
+#Plot by part of embryo dissected (embryo proper or yolk sac)
+plot_cells(EYS_cds, color_cells_by = "part",
            label_cell_groups = FALSE,
            show_trajectory_graph = FALSE,
            label_branch_points = FALSE,
            label_leaves = FALSE,
            graph_label_size = 0.75,
-           cell_size = 0.75)
+           cell_size = 0.5)
 
-ggsave("FIGXX_EmbryoYS_VECad_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
-
-plot_cells(EYS_cds, genes = c("Kdr"), color_cells_by = "cluster",
-           label_cell_groups = FALSE,
-           show_trajectory_graph = FALSE,
-           label_branch_points = FALSE,
-           label_leaves = FALSE,
-           graph_label_size = 0.75,
-           cell_size = 0.75)
-
-ggsave("FIGXX_EmbryoYS_Kdr_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
-
-#Might use at some point, RA Aldh1a enzyme expresion in embryo
-plot_cells(EYS_cds, genes = c("Aldh1a2"), color_cells_by = "cluster",
-           label_cell_groups = FALSE,
-           show_trajectory_graph = FALSE,
-           label_branch_points = FALSE,
-           label_leaves = FALSE,
-           graph_label_size = 0.75,
-           cell_size = 0.75)
-ggsave("FIGXX_EmbryoYS_Aldh1a2_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
-
+ggsave("EmbryoYS_fullcds_dissection_part.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #Subset endothelial clusters
 ec_cells =
@@ -154,7 +146,7 @@ plot_cells(ec_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_leaves = FALSE,
            graph_label_size = 0.75,
            cell_size = 1)
-ggsave("FIGXX_EmbryoYS_EC_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+ggsave("EmbryoYS_ECsub_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #Plot endothelial cells colored by YS/EP
 plot_cells(ec_cds, color_cells_by = "part",
@@ -164,7 +156,7 @@ plot_cells(ec_cds, color_cells_by = "part",
            label_leaves = FALSE,
            graph_label_size = 0.75,
            cell_size = 1)
-ggsave("FIGXX_EmbryoYS_Aldh1a2_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+ggsave("EmbryoYS_ECsub_dissection_part.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #From endothelial cells, subset embryo
 eb_cells =
@@ -177,7 +169,7 @@ eb_cells =
   as.character() 
 ec_eb_cds = ec_cds[,eb_cells]
 
-#Plot Lyve1 exp in endothelial cells
+#Plot Lyve1 exp in embryo proper subset
 plot_cells(ec_eb_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_cell_groups = FALSE,
            show_trajectory_graph = FALSE,
@@ -185,6 +177,7 @@ plot_cells(ec_eb_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_leaves = FALSE,
            graph_label_size = 0.75,
            cell_size = 1)
+ggsave("EmbryoYS_ECsub_embryoproper_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #From endothelial cells, subset yolk sac
 ys_cells =
@@ -197,7 +190,7 @@ ys_cells =
   as.character() 
 ec_ys_cds = ec_cds[,ys_cells]
 
-#Plot Lyve1 exp in endothelial cells
+#Plot Lyve1 exp in yolk sac subset
 plot_cells(ec_ys_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_cell_groups = FALSE,
            show_trajectory_graph = FALSE,
@@ -205,6 +198,7 @@ plot_cells(ec_ys_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_leaves = FALSE,
            graph_label_size = 0.75,
            cell_size = 1)
+ggsave("EmbryoYS_ECsub_yolksac_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #########Estimate gene set scores##############
 #Function for estimating gene set scores
@@ -261,12 +255,12 @@ for (geneset_name in names(list_of_genesets)) {
   #Reorder data frame so that cells with highest gene set score are on the top.  Reorder from lowest expression to highest.  Has to be a dataframe
   ordered_marker_coldata = marker_coldata[order(marker_coldata$score),]
   #Plot in UMAP space
-  p <- ggplot (data=ordered_marker_coldata, mapping = aes(x=umap1, y=umap2, color = score)) +
-    scale_size_continuous(range = c(0.25, 0.5)) +
+  p <- ggplot (data=ordered_marker_coldata, mapping = aes(x=umap1, y=umap2, color = score, size = 0.25)) +
+    scale_size_continuous(range = c(0.25, 0.25)) +
     #
     scale_color_gradientn(colours = mycol) +
     #bottom is entire data set
-    geom_point(data=Ordered_EB3_cds, aes(umap1, umap2), color = "gray", size = 0.25, alpha = 0.8) + geom_jitter() +
+    geom_point(data=ordered_marker_coldata, aes(umap1, umap2), color = "gray", size = 0.25, alpha = 0.8) + geom_jitter() +
     #add facet wrap here by days
     #facet_wrap(~day, ncol = 4) +
     #Themes
@@ -338,8 +332,6 @@ for (geneset_name in names(list_of_genesets)) {
   #Save the plot
   ggsave(filename = paste0(geneset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300, bg = "white")
 }
-  
-
 
 ######Creating heatmaps for different geneset scores###########
 #Generate PS score data
@@ -425,6 +417,12 @@ for (dataset_name in names(list_of_datasets)) {
   #Save image
   ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300)
 }
+
+
+
+
+
+
 
 
 
