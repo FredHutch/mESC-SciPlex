@@ -112,7 +112,7 @@ for (gene in gene_list) {
                   label_branch_points = FALSE,
                   label_leaves = FALSE,
                   graph_label_size = 0.75,
-                  cell_size = 0.75)
+                  cell_size = 1)
   # Save the plot
   ggsave(filename = paste0(gene, "_exp_full_EmbryoYolkSac.tiff"), plot = p, width = 6, height = 6, dpi = 300, bg = "transparent")
 }
@@ -176,7 +176,7 @@ plot_cells(ec_eb_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_branch_points = FALSE,
            label_leaves = FALSE,
            graph_label_size = 0.75,
-           cell_size = 1)
+           cell_size = 2)
 ggsave("EmbryoYS_ECsub_embryoproper_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #From endothelial cells, subset yolk sac
@@ -197,7 +197,7 @@ plot_cells(ec_ys_cds, genes = c("Lyve1"), color_cells_by = "cluster",
            label_branch_points = FALSE,
            label_leaves = FALSE,
            graph_label_size = 0.75,
-           cell_size = 1)
+           cell_size = 2)
 ggsave("EmbryoYS_ECsub_yolksac_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
 #########Estimate gene set scores##############
@@ -240,10 +240,13 @@ AEC2_Xu <- c("Efnb2","Bmx","Gja5","Gja4","Cd200","Cxcl12","Kitl","Gkn3","Fbln2",
 
 ####Plot gene set scores in UMAP across entire EB dataset
 #Creating list of genesets to be used
+list_of_genesets <- list(Mesenchyme,EXE_mesoderm)
+names(list_of_genesets) <- c("Mesenchyme_geneset_liberal", "EXE_mesoderm_geneset_liberal") # more red dots; lower gss threshold for highlighting
+
 list_of_genesets <- list(Mesenchyme,Cardiomyocytes,EXE_mesoderm,AEC1_Kalucka,AEC2_Xu)
 names(list_of_genesets) <- c("Mesenchyme_geneset","Cardiomyocytes_geneset", "EXE_mesoderm_geneset","AEC1_Kalucka_geneset","AEC2_Xu_geneset")
 #Set colors for plotting gene set scores
-mycol <- c("gray80", "gray80", "gray80", "gray80", "gray80", "red", "red4")
+mycol <- c("gray80", "gray80", "gray80", "gray80", "gray80", "red1", "red4") # change as needed to highlight different populations
 #For loop to generate gene set heat maps
 for (geneset_name in names(list_of_genesets)) {
   # Extract the geneset from the list
@@ -325,12 +328,12 @@ for (geneset_name in names(list_of_genesets)) {
     #bottom is entire data set
     geom_point(data=Ordered_gss_cds, aes(umap1, umap2), color = "gray", size = 0.25, alpha = 0.8) + geom_jitter() +
     #add facet wrap here by days
-    facet_wrap(~day, ncol = 4) +
+    facet_wrap(~day, nrow = 4, scales = "free_y") +
     #Themes
     theme(legend.position = "left") +
     my_theme
   #Save the plot
-  ggsave(filename = paste0(geneset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300, bg = "white")
+  ggsave(filename = paste0(geneset_name, ".tiff"), plot = p, width = 4, height = 9, dpi = 300, bg = "white")
 }
 
 ######Creating heatmaps for different geneset scores###########
@@ -377,14 +380,14 @@ gss_cell_counts <- function(data, threshold_values) {
   return(result_df)
 }
 # Define the threshold values for each column
-threshold_values <- c(PS_score = gss_MP$PS_MP, LPM_score = gss_MP$LPM_MP, EEC_score = gss_MP$EEC_MP, IEC_score = gss_MP$IEC_MP)  # Replace with the actual threshold values for each column
+threshold_values <- c(PS_score = gss_MP$PS_MP, EEC_score = gss_MP$EEC_MP, IEC_score = gss_MP$IEC_MP)  # Replace with the actual threshold values for each column
 #Run new function to calcualt cell counts for each day
 result_df_day4 <- gss_cell_counts(day4_gss, threshold_values)
 result_df_day5 <- gss_cell_counts(day5_gss, threshold_values)
 result_df_day6 <- gss_cell_counts(day6_gss, threshold_values)
 
 # Manually define the desired order for rows and columns
-desired_row_order <- c("PS_score", "LPM_score", "IEC_score","EEC_score") # Replace with actual row names
+desired_row_order <- c("PS_score", "IEC_score","EEC_score") # Replace with actual row names
 desired_col_order <- c("1","5","9","13","2","6","10","14","3","7","11","15","4","8","12","16") # Replace with actual column names
 
 #Manual set the order so it is easier to read through the table
@@ -418,8 +421,59 @@ for (dataset_name in names(list_of_datasets)) {
   ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300)
 }
 
+##########Run again to make separate heatmap for LPM
+# Define the threshold values for each column
+threshold_values <- c(LPM_score = gss_MP$LPM_MP)
+#Run new function to calcualt cell counts for each day
+result_df_day4 <- gss_cell_counts(day4_gss, threshold_values)
+result_df_day5 <- gss_cell_counts(day5_gss, threshold_values)
+result_df_day6 <- gss_cell_counts(day6_gss, threshold_values)
 
+# Manually define the desired order for rows and columns
+desired_row_order <- c("LPM_score") # Replace with actual row names
+desired_col_order <- c("1","5","9","13","2","6","10","14","3","7","11","15","4","8","12","16") # Replace with actual column names
 
+#Manual set the order so it is easier to read through the table, include drop = F if there is only 1 row
+result_df_day4 <- result_df_day4[, desired_col_order, drop = F]
+result_df_day5 <- result_df_day5[, desired_col_order, drop = F]
+result_df_day6 <- result_df_day6[, desired_col_order, drop = F]
+#Manually set the scale of the heatmap
+breaks <- seq(0, 100, by = 0.1)  # Adjust the 'by' value as needed for finer or coarser color transitions
+#Creat the color palette you want
+color_palette <- colorRampPalette(c("gray80", "blue2", "green2","yellow2"))(length(breaks) - 1)
+#Plot day 4
+p <- pheatmap(result_df_day4,
+              scale = "none", # No scaling, use raw cell numbers
+              cluster_cols = FALSE,
+              cluster_rows = FALSE,
+              clustering_method = "complete",
+              color = color_palette,
+              breaks = breaks,
+              annotation_legend = TRUE
+)
+ggsave("LPM-geneset-Day4.tiff",plot = p, width = 6, height = 2, dpi = 300, bg = "transparent")
+#Plot day 4
+p <- pheatmap(result_df_day5,
+         scale = "none", # No scaling, use raw cell numbers
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         clustering_method = "complete",
+         color = color_palette,
+         breaks = breaks,
+         annotation_legend = TRUE
+)
+ggsave("LPM-geneset-Day5.tiff", plot = p, width = 6, height = 2, dpi = 300, bg = "transparent")
+#Plot day 6
+p <- pheatmap(result_df_day6,
+         scale = "none", # No scaling, use raw cell numbers
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         clustering_method = "complete",
+         color = color_palette,
+         breaks = breaks,
+         annotation_legend = TRUE
+)
+ggsave("LPM-geneset-Day6.tiff", plot = p, width = 6, height = 2, dpi = 300, bg = "transparent")
 
 
 
