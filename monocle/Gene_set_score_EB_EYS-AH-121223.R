@@ -9,7 +9,8 @@ suppressPackageStartupMessages({
   library(monocle3)
   library(forcats)
   library(pheatmap)
-  
+  library(RColorBrewer)
+  library(reshape2)
   library(tibble)
   library(Rcpp)
   library(reticulate)
@@ -20,10 +21,9 @@ suppressPackageStartupMessages({
   library(ggpubr)
   library(scales)
   library(org.Mm.eg.db)
-  #library(garnett) #Do not have loaded
-  
   library(WriteXLS)
-  
+  #library(garnett) #Do not have loaded
+
   DelayedArray:::set_verbose_block_processing(TRUE)
   options(DelayedArray.block.size=1000e7)})
 
@@ -104,7 +104,7 @@ setwd(plotdir)
 ####Plot single gene expression in Embryo/Yolk Sac for a given gene
 #Set genes in list
 gene_list <- c("Kdr", "Cdh5","Aldh1a2","Runx1","Rara","Rarb","Rarg","Hbb-bh1")  # Replace with actual gene names
-
+#gene_list <- c("Cxcr4", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
 for (gene in gene_list) {
   p <- plot_cells(EYS_cds, genes = gene, color_cells_by = "cluster",
                   label_cell_groups = FALSE,
@@ -202,7 +202,6 @@ ggsave("EmbryoYS_ECsub_yolksac_Lyve1_exp.tiff", width = 6, height = 6, dpi = 300
 
 #########Estimate gene set scores##############
 #Function for estimating gene set scores
-#### Estimate gene set scores for signature gene lists
 estimate_score <- function(cds, markers){
   cds_score = cds[fData(cds)$gene_short_name %in% markers,] 
   aggregate_score = exprs(cds_score)
@@ -364,7 +363,7 @@ day5_gss <- gss_coldata[gss_coldata$day == '5', ]
 day6_gss <- gss_coldata[gss_coldata$day == '6', ]
 
 
-# Define the modified function to calculate the sum for cells greater than the threshold value, make the condition the row names, and transpose the dataframe
+# Function to calculate the sum for cells greater than the threshold value, make the condition the row names, and transpose the dataframe
 gss_cell_counts <- function(data, threshold_values) {
   result_df <- data.frame(condition = unique(data$condition))
   for (col in names(threshold_values)) {
@@ -379,7 +378,7 @@ gss_cell_counts <- function(data, threshold_values) {
   result_df <- t(result_df)
   return(result_df)
 }
-# Define the threshold values for each column
+# Set midpoint as threshold values for each column
 threshold_values <- c(PS_score = gss_MP$PS_MP, EEC_score = gss_MP$EEC_MP, IEC_score = gss_MP$IEC_MP)  # Replace with the actual threshold values for each column
 #Run new function to calcualt cell counts for each day
 result_df_day4 <- gss_cell_counts(day4_gss, threshold_values)
@@ -421,7 +420,7 @@ for (dataset_name in names(list_of_datasets)) {
   ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 4, dpi = 300)
 }
 
-##########Run again to make separate heatmap for LPM
+###Run again to make separate heatmap for LPM
 # Define the threshold values for each column
 threshold_values <- c(LPM_score = gss_MP$LPM_MP)
 #Run new function to calcualt cell counts for each day

@@ -13,7 +13,6 @@ suppressPackageStartupMessages({
   library(pheatmap)
   library(RColorBrewer)
   library(reshape2)
-#Brandon loads also  
   library(tibble)
   library(Rcpp)
   library(reticulate)
@@ -24,7 +23,8 @@ suppressPackageStartupMessages({
   library(ggpubr)
   library(scales)
   library(org.Mm.eg.db)
-  #library(garnett) currently do not have loaded
+  library(WriteXLS)
+  #library(garnett) #Do not have loaded
   
   DelayedArray:::set_verbose_block_processing(TRUE)
   options(DelayedArray.block.size=1000e7)})
@@ -98,7 +98,7 @@ ggsave("FIG1B_EB_cds_cluster.tiff", width = 6, height = 6, dpi = 300, bg = "tran
 ####Plot single gene expression for a given gene
 #Set genes in list
 gene_list <- c("Hbb-bh1", "Aldh1a2", "Rara","Rarb","Rarg")  # Replace with actual gene names
-
+#gene_list <- c("Cxcr4", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
 for (gene in gene_list) {
   p <- plot_cells(EB3_cds, genes = gene, color_cells_by = "cluster",
              label_cell_groups = FALSE,
@@ -112,8 +112,6 @@ for (gene in gene_list) {
 }
 
 #### Generate a heat maps to designate a cell types to a cluster (Supplemental Figure?)#######
-#load RColorBrewer
-library(RColorBrewer)
 #Read in gene short names for gene anotations
 genes = 
   read.table(file = "/Users/adamheck/Desktop/mESC-SciPlex/processed_data/Sanjay_files/gene.annotations",
@@ -121,7 +119,7 @@ genes =
              header = F,
              col.names = c("id", "gene_short_name"))
 
-#Gene markers that describe designated cell type
+#Diagnostic markers that describe designated cell type
 type_genes <- c(
   #epiblast#  
   "Dnmt3b", "Pou5f1", "Epcam", "Utf1",
@@ -154,14 +152,14 @@ EB3_cds_type <- EB3_cds [rowData(EB3_cds)$gene_short_name %in% type_genes,]
 #Create a df of cell groups (clusters)
 EB3_type_group_df <- tibble::tibble(cell=row.names(colData(EB3_cds_type)), EB3_type_group="clusters"(EB3_cds_type)[colnames(EB3_cds_type)])
 
-#generates matrix using aggregate gene expression for cell group [cluster] (what is the gene expression value?????)
+#generates matrix using aggregate gene expression for cell group [cluster]
 EB3_type_ag_mat <- aggregate_gene_expression(EB3_cds_type, gene_group_df=NULL, EB3_type_group_df, norm_method = c("binary"),
                                              scale_agg_values = F)
 
 #replaces gene id with gene short name#
 row.names(EB3_type_ag_mat) = genes[match(row.names(EB3_type_ag_mat), genes$id),]$gene_short_name 
 
-### Organise matrix and add annotation###
+### Organize matrix and add annotation###
 sub_type <- structure(EB3_type_ag_mat, ".dimnames" = list(c(
   #epiblast#  
   "Dnmt3b", "Pou5f1", "Epcam", "Utf1",
@@ -227,10 +225,12 @@ sub_anno_type <- structure(list("cell_type" = c("Epiblast", "Epiblast", "Epiblas
                              #Endoderm#
                              "Dkk1", "Krt19", "Amot", "Spink1", "Emb", "Cystm1", "Apoe", "Apoa2", "Ttr"),
                            class="data.frame")
+#Reorder based on diagnostic marker cell typing annotation
 sub_samp_ordered <- sub_type[row.names(sub_anno_type),]
+# Create a heatmap of diagnostic markers and clusters
 breaks <- seq(0, 3, by = 0.1)
 color_palette <- colorRampPalette(rev(brewer.pal(n = 11, name = "RdYlBu")))(length(breaks) - 1)
-# Create a heatmap with customized annotation_row color
+
 pheatmap::pheatmap(sub_samp_ordered, annotation_row = sub_anno_type,color = color_palette,
                    breaks = breaks, clustering_method = "ward.D",
                    annotation_legend = F, cellwidth = 6, cellheight= 6,
@@ -238,12 +238,7 @@ pheatmap::pheatmap(sub_samp_ordered, annotation_row = sub_anno_type,color = colo
                    filename = "FIGS2_EB_Heat_map_for_cell_type.tiff",
                    width = 8, height = 11, dpi = 300, bg = "transparent")
 dev.off()#Use here b/c heatmap seems to throw off plotter
-sub_type_total <- rownames(sub_type)
-sub_anno_type_total <- rownames(sub_anno_type)
-outliers1 <- setdiff(sub_anno_type_total,sub_type_total)
-print(outliers1)
-outliers2 <- setdiff(sub_type_total,sub_anno_type_total)
-print(outliers2)
+
 ####Assign cell types using heatmap of clusters and marker expression - Figure1C####
 EB3_assigned_cell_type_cds <- EB3_cds
 colData(EB3_assigned_cell_type_cds)$assigned_cell_type <- as.character(clusters(EB3_assigned_cell_type_cds))
@@ -264,7 +259,7 @@ colData(EB3_assigned_cell_type_cds)$assigned_cell_type = dplyr::recode(colData(E
         "35" = "Cardiomyocytes",
         "21" = "Unknown", "45" = "Unknown", "46" = "Unknown")
 
-#plot cells for celltype
+#plot cells for celltype, full dataset
 plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_by = "assigned_cell_type", show_trajectory_graph = F, label_cell_groups = F,
            group_label_size = 4.5, label_groups_by_cluster =F, label_branch_points = F, label_roots = F, label_leaves = F,
            graph_label_size = 0.1, cell_size = 0.2) +
@@ -286,15 +281,14 @@ plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_b
 
 ggsave("FIG1C-EB_cds_assigned_cell_types_FULL2.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
 
-#plot cells for cell type by Activin/BMP conditions
-######Reorder condition as factor levels so it will plot in the correct order (this should be moved up front during preprocessing for final script)
+# Plot cells for cell type by Activin/BMP conditions
 # Extract colData
 cds_colData <- colData(EB3_assigned_cell_type_cds)
 # Reorder the 'condition' factor levels
 cds_colData$condition <- factor(cds_colData$condition, levels = as.character(1:16))
 # Replace the colData in the cds
 colData(EB3_assigned_cell_type_cds) <- cds_colData
-
+# Plot cells
 plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_by = "assigned_cell_type", show_trajectory_graph = F, label_cell_groups = F,
            group_label_size = 4.5, label_groups_by_cluster =F, label_branch_points = F, label_roots = F, label_leaves = F,
            graph_label_size = 0.1, cell_size = 0.2) +
@@ -314,6 +308,8 @@ plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_b
         strip.text = element_blank())
 
 ggsave("FIGS4-EB_cds_assigned_cell_types_ActivinBMP-gradient.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+
+
 ####Filter assigned cell type cds by day for figure 2#####
 #Day4
 EB3_assigned_cell_type_D4_cells_to_keep =
@@ -373,8 +369,8 @@ for (dataset_name in names(list_of_datasets)) {
   ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 6, height = 6, dpi = 300, bg = "transparent")
 }
 
-####PLOT and FILTER based on EXPRESSION OF ONE VS ANOTHER GENE to CREATE DF with GENE EXPRESSION CHARACTERISTICS####
-#Pull out for genes interested in, otherwise too big to compute
+## Create dataframe with genes of interest to use for cell counts and specific gene expresssion
+# Need to filter otherwise too big to compute with full cds gene list
 Paper_genes <- c("Cxcr4", "Cyp26a1", "Cyp26b1", "Aldh1a2", "Rbp1", "Crabp2", "Crabp1", "Rara", "Rarg", "Rarb",
                  "Cdx2", "Cdx1", "Hoxa9", "Hoxa11", "Arrb1", "Arrb2", "Clec1a", "Clec1b", "P2rx7",
                  "Pdgfra", "Kdr", "Bmp4", "Mixl1", "Eomes", "Lhx1", "Ahnak", "Etv2", "Itga2b",
@@ -382,26 +378,17 @@ Paper_genes <- c("Cxcr4", "Cyp26a1", "Cyp26b1", "Aldh1a2", "Rbp1", "Crabp2", "Cr
                  "Dll4", "Notch1", "Dlk1", "Gja5", "Vwf", "Sox17", "Gata4", "Foxf1", "Runx1",
                  "Cd44", "Procr", "Itgb3", "Itgb7", "Trim47", "Cd38", "Lyve1", "Stab2", "Ace")
 Paper_cds <- EB3_assigned_cell_type_cds [rowData(EB3_assigned_cell_type_cds)$gene_short_name %in% Paper_genes,]
-#72832 cells in Paper_cds, 72832 cells in the EB3_assigned_celltype cds, not sure what the filter is for then.
 Paper_exprs <- SingleCellExperiment::counts(Paper_cds)
-#normalize counts
 Paper_exprs <- reshape2::melt(as.matrix(Paper_exprs)) 
 colnames(Paper_exprs) <- c("f_id", "Cell", "expression")
-#make a matrix that has expression vs short_gene_name and cell and everything else in coldata - very useful!!!!!!
 Paper_cds_coldata <- colData(Paper_cds)
-#adds coldata info get error if do row data 1st
 Paper_exprs <- merge(Paper_exprs, Paper_cds_coldata, by.x = "Cell", by.y = "row.names")
-#add gene_short_name to dataframe or cds
-#load gene annotations file
 genes = read.table(file = "/Users/adamheck/Desktop/mESC-SciPlex/processed_data/Sanjay_files/gene.annotations", sep = "\t", header = F, col.names = c("f_id", "gene_short_name"))
-#add column with gene short name
 Paper_exprs <- merge(Paper_exprs, genes, by = "f_id")
-#Create data frame from matrix and add umap cluster condition info  note: SPREAD puts gene_short_name in columns
 dfPaper = data.frame(Paper_exprs)
 dfPaper_1 = dfPaper %>% 
   dplyr::select(Cell,  expression,  gene_short_name, umap1,  umap2, Cluster, condition, day, assigned_cell_type)%>%
   spread(key = gene_short_name, value = expression, fill = 0)
-
 
 ####Generate heatmaps based on cell numbers for cell type or specific cell expression####
 ####Cell type
@@ -455,7 +442,6 @@ for (dataset_name in names(list_of_datasets)) {
   #Save image
   ggsave(filename = paste0(dataset_name, ".tiff"), plot = p, width = 8, height = 6, dpi = 300)
 }
-
 
 
 ####### Filter cells based on marker expression#########
@@ -652,19 +638,12 @@ plot_cells(endo_sub_cds)
 endo_cds <- endo_sub_cds [rowData(endo_sub_cds)$gene_short_name %in% Paper_genes,]
 #Create expression matrix
 endo_exprs <- SingleCellExperiment::counts(endo_cds)
-#normalize counts
 endo_exprs <- reshape2::melt(as.matrix(endo_exprs)) 
 colnames(endo_exprs) <- c("f_id", "Cell", "expression")
-#make a matrix that has expression vs short_gene_name and cell and everything else in coldata - very useful!!!!!!
 endo_cds_coldata <- colData(endo_cds)
-#adds coldata info get error if do row data 1st
 endo_exprs <- merge(endo_exprs, endo_cds_coldata, by.x = "Cell", by.y = "row.names")
-#add gene_short_name to dataframe or cds
-#load gene annotations file
 genes = read.table(file = "/Users/adamheck/Desktop/mESC-SciPlex/processed_data/Sanjay_files/gene.annotations", sep = "\t", header = F, col.names = c("f_id", "gene_short_name"))
-#add column with gene short name
 endo_exprs <- merge(endo_exprs, genes, by = "f_id")
-#Create data frame from matrix and add umap cluster condition info  note: SPREAD puts gene_short_name in columns
 dfendo = data.frame(endo_exprs)
 dfendo_1 = dfendo %>% 
   dplyr::select(Cell,  expression,  gene_short_name, umap1,  umap2, Cluster, condition, day, assigned_cell_type)%>%
@@ -675,15 +654,17 @@ dfendo_express = dfendo_1 %>% filter(Cdh5>0.1 & Dll4 >0.1)
 HE_dataset <- dfendo_express
 
 # Calculate expression patterns
-HE_dataset$expression_pattern <- ifelse(HE_dataset$Cxcr4 > 0.1 & HE_dataset$Lyve1 > 0.1, "Double Positive",
-                                     ifelse(HE_dataset$Cxcr4 > 0.1 & HE_dataset$Lyve1 <= 0.1, "Cxcr4 Positive",
-                                            ifelse(HE_dataset$Cxcr4 <= 0.1 & HE_dataset$Lyve1 > 0.1, "Lyve1 Positive", "Double Negative")))
+HE_dataset$expression_pattern <- ifelse(HE_dataset$Lyve1 > 0.1, "Lyve1 Positive", "Lyve1 Negative")
+#Calculate how many Lyve1 + or - cells there are
+sum_of_levels <- sum(expression_counts["Lyve1 Positive"])
+print(sum_of_levels)
+#214
+sum_of_levels <- sum(expression_counts["Lyve1 Negative"])
+print(sum_of_levels)
+#485
 
 # Define color mappings
-color_mapping <- c("Double Positive" = "gray95", "Cxcr4 Positive" = "goldenrod2", "Lyve1 Positive" = "skyblue2", "Double Negative" = "darkorchid4")
-
-# Define the order of levels for the expression_pattern variable
-HE_dataset$expression_pattern <- factor(HE_dataset$expression_pattern, levels = c("Cxcr4 Positive", "Lyve1 Positive", "Double Negative", "Double Positive"))
+color_mapping <- c("Lyve1 Positive" = "darkorange", "Lyve1 Negative" = "darkorchid4")
 
 # Plot the cells in a UMAP space, coloring them based on the expression patterns
 ggplot(data=HE_dataset, mapping = aes(x=umap1, y=umap2, color = expression_pattern, size = 0.5)) +
@@ -716,7 +697,65 @@ ggplot(data=HE_dataset, mapping = aes(x=umap1, y=umap2, color = expression_patte
   ggtitle(paste("VECad+Dll4+", dataset_name)) +
   no_axes()
 
-ggsave("FIG4B-VECad_Dll4_cells_Cxcr4Lyve1_exp.tiff", width = 6, height = 4, dpi = 300, bg = "white")
+ggsave("FIG4B-VECad_Dll4_cells_Lyve1_exp.tiff", width = 6, height = 4, dpi = 300, bg = "white")
+
+###Check expression of HE genes in the context of HE/EC subset UMAP space
+gene_list <- c("Cxcr4","Lyve1", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
+for (gene in gene_list) {
+  p <- plot_cells(endo_sub_cds, genes = gene, color_cells_by = "cluster",
+                  label_cell_groups = FALSE,
+                  show_trajectory_graph = FALSE,
+                  label_branch_points = FALSE,
+                  label_leaves = FALSE,
+                  graph_label_size = 0.75,
+                  cell_size = 0.5)
+  # Save the plot
+  ggsave(filename = paste0(gene, "_exp_HE-EC_cds.tiff"), plot = p, width = 6, height = 6, dpi = 300, bg = "transparent")
+}
+
+###Check Tessa's gene modules within the context of HE subset
+estimate_score <- function(cds, markers){
+  cds_score = cds[fData(cds)$gene_short_name %in% markers,] 
+  aggregate_score = exprs(cds_score)
+  aggregate_score = Matrix::t(Matrix::t(aggregate_score) / pData(cds_score)$Size_Factor)
+  aggregate_score = Matrix::colSums(aggregate_score)
+  pData(cds)$score = log(aggregate_score +1) 
+  return(cds)
+}
+##Create gene sets
+Tessmod9 <- c("Sox17", "Dll4", "Enfb2", "Hey1", "Nrp1", "Nos3","Vwf","Cd44","Cxcr4","Cdkn1c","H19","Mecom","Txnip","Igf2")
+Tessmod15 <- c("Runx1","Spi1","Myb","Kit","Gfi1","Npr1","Mycn","Gck","Sfrp","Neurl3","Phgdh","Hlf","Ift57","Lmo1")
+
+list_of_genesets <- list(Tessmod9,Tessmod15)
+names(list_of_genesets) <- c("Tessamod9_geneset","Tessmod15_geneset")
+#Set colors for plotting gene set scores
+mycol <- c("gray80", "gray80", "gray80", "gray80", "gray80", "red1", "red4") # change as needed to highlight different populations
+#For loop to generate gene set heat maps
+for (geneset_name in names(list_of_genesets)) {
+  # Extract the geneset from the list
+  geneset <- list_of_genesets[[geneset_name]]
+  # Calculate gene set score
+  eb_cds <- estimate_score(endo_sub_cds, markers = geneset)
+  #Create data frame for ordering the cells
+  marker_coldata = colData(eb_cds) %>% as_tibble()
+  #Reorder data frame so that cells with highest gene set score are on the top.  Reorder from lowest expression to highest.  Has to be a dataframe
+  ordered_marker_coldata = marker_coldata[order(marker_coldata$score),]
+  #Plot in UMAP space
+  p <- ggplot (data=ordered_marker_coldata, mapping = aes(x=umap1, y=umap2, color = score, size = 0.25)) +
+    scale_size_continuous(range = c(0.25, 0.25)) +
+    #
+    scale_color_gradientn(colours = mycol) +
+    #bottom is entire data set
+    geom_point(data=ordered_marker_coldata, aes(umap1, umap2), color = "gray", size = 0.25, alpha = 0.8) + geom_jitter() +
+    #add facet wrap here by days
+    #facet_wrap(~day, ncol = 4) +
+    #Themes
+    theme(legend.position = "left") +
+    my_theme
+  #Save the plot
+  ggsave(filename = paste0(geneset_name, ".tiff"), plot = p, width = 4, height = 4, dpi = 300, bg = "white")
+}
+
 
 
 ####If plots are no longer plotting try####
