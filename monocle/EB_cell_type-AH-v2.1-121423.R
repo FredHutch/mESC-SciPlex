@@ -98,7 +98,7 @@ ggsave("FIG1B_EB_cds_cluster.tiff", width = 6, height = 6, dpi = 300, bg = "tran
 ####Plot single gene expression for a given gene
 #Set genes in list
 gene_list <- c("Hbb-bh1", "Aldh1a2", "Rara","Rarb","Rarg")  # Replace with actual gene names
-#gene_list <- c("Cxcr4", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
+#gene_list <- c("Runx1","Cxcr4", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
 for (gene in gene_list) {
   p <- plot_cells(EB3_cds, genes = gene, color_cells_by = "cluster",
              label_cell_groups = FALSE,
@@ -280,6 +280,15 @@ plot_cells(EB3_assigned_cell_type_cds, group_cells_by = "cluster", color_cells_b
   
 
 ggsave("FIG1C-EB_cds_assigned_cell_types_FULL2.tiff", width = 6, height = 6, dpi = 300, bg = "transparent")
+
+# Extract cell type and cluster info into table
+phenotypic_data <- pData(EB3_assigned_cell_type_cds)
+# Create a new dataframe with just the cluster and cell type information
+cluster_celltype_df <- data.frame(
+  Cluster = phenotypic_data$Cluster,
+  CellType = phenotypic_data$assigned_cell_type
+)
+write.csv(cluster_celltype_df, file.path(plotdir, "cluster-celltype-info.csv"))
 
 # Plot cells for cell type by Activin/BMP conditions
 # Extract colData
@@ -699,8 +708,46 @@ ggplot(data=HE_dataset, mapping = aes(x=umap1, y=umap2, color = expression_patte
 
 ggsave("FIG4B-VECad_Dll4_cells_Lyve1_exp.tiff", width = 6, height = 4, dpi = 300, bg = "white")
 
+# Check expression of Cxcr4 in VECad+Dll4+ subset
+cxcr4_positive_data <- subset(HE_dataset, expression_pattern == "Cxcr4 Positive")
+# Create color code
+color_single <- c("Cxcr4 Positive"="deeppink2")
+# Plot the cells in a UMAP space, coloring them based on the expression patterns
+ggplot(data=cxcr4_positive_data, mapping = aes(x=umap1, y=umap2, color = expression_pattern, size = 0.5)) +
+  scale_size_continuous(range = c(0.5, 0.5)) +
+  scale_color_manual(values = color_single) + 
+  geom_jitter() +
+  #bottom
+  geom_point(data=dfendo, aes(umap1, umap2), color = "gray95", size = 0.1, alpha = 0.8) + geom_jitter() +
+  
+  #add facet wrap here if want 4x4
+  #facet_wrap(~condition, nrow = 4) +  
+  theme(plot.title=element_text(hjust=0.5, face='bold', color = 'black', size = 10)) +
+  theme(legend.position = "right") +
+  theme(panel.border = element_blank(),
+        panel.background = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "white", color = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.line.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.key = element_rect(fill = "white")) +  # Set the background color of the legend keys to white
+  ggtitle(paste("VECad+Dll4+", dataset_name)) +
+  no_axes()
+
+ggsave("FIG4B-VECad_Dll4_cells_Cxcr4_pos.tiff", width = 6, height = 4, dpi = 300, bg = "white")
+
+
 ###Check expression of HE genes in the context of HE/EC subset UMAP space
-gene_list <- c("Cxcr4","Lyve1", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
+gene_list <- c("Kdr","Dll4","Cdh5","Etv2","Runx1","Cxcr4","Lyve1", "Gfi1","Hlf","Myb","Spi1","Neurl3","Phgdh","Sfrp2","Nupr1","Mycn","Gck","Ift57","Eya2")
 for (gene in gene_list) {
   p <- plot_cells(endo_sub_cds, genes = gene, color_cells_by = "cluster",
                   label_cell_groups = FALSE,
@@ -761,12 +808,107 @@ for (geneset_name in names(list_of_genesets)) {
 ####If plots are no longer plotting try####
 dev.off()
 
+###########################################
+############### Testing Area###############
+###########################################
+color_palette <- colorRampPalette(c("grey80", "blue", "green","yellow"))(100)
+#Vector for renaming the rows
+row_name_mapping <- c("1"="C1","2"="C2","3"="C3", "4"="C4","5"="C5","6"="C6","7"="C7","8"="C8","9"="C9","10"="C10","11"="C11","12"="C12","13"="C13","14"="C14","15"="C15","16"="C16")
+# Manually define the desired order for rows and columns
+desired_row_order <- c("VascMeso","ImmatHE", "MatureHE","ArterHE") # Replace with actual row names
+desired_col_order <- c("C1","C5","C9","C13","C2","C6","C10","C14","C3","C7","C11","C15","C4","C8","C12","C16") # Replace with actual column names
+
+dataset <- day6_df
+# Change condition to the rowname
+dataset <- dataset[, -which(names(dataset) == "condition")]
+# Remove day column
+dataset <- dataset[, !colnames(dataset) %in% 'day']
+# Remove total number column
+dataset <- dataset[, !colnames(dataset) %in% 'number_condition']
+# Rename rownames
+rownames(dataset) <- row_name_mapping[as.character(rownames(dataset))]
+#Transpose the data
+dataset <- t(dataset)
+#Re-order for heatmap
+dataset <- dataset[desired_row_order, desired_col_order]
+#Plot heatmap
+p <- pheatmap(dataset,
+              scale = "none", # No scaling, use raw cell numbers
+              cluster_cols = FALSE,
+              cluster_rows = FALSE,
+              clustering_method = "complete",
+              color = color_palette,
+              annotation_legend = TRUE
+)
+
+
+
+
+plot_cells(endo_cds, genes = "Runx1", color_cells_by = "cluster",
+           label_cell_groups = FALSE,
+           show_trajectory_graph = FALSE,
+           label_branch_points = FALSE,
+           label_leaves = FALSE,
+           graph_label_size = 0.75,
+           cell_size = 0.5)
+
+
+
+
+##Create gene sets
+HSC_sig_cav <- c("Runx1","Hoxa9","Mllt3","Mecom","Hlf","Spink2")
+HSC_SR_genes <- c("Cdkn1c", "Mecom", "Pbx1", "Txnip", "Kmt2a", "Tcf15", "Erg", "Sirt6", "Kdm6b", "H19", "Id1", "Igf2", "Ndn", "Eng", "Cd81", "Prdm16")
+AGM_HSC_sig_genes <- c("Hes1", "Hey1", "Notch4", "Sox17", "Il6st", "Nos3", "Flt1", "Kdr", "Ly6a", "Cdkn1c", "Pdzk1ip1", "Procr", "Ramp2", "Trim47", "Vwf", "Meis2", "Cdh5", "Gfi1", "Pbx1", "Ptprb", "Bmp2k", "Nrp1", "Ptpru", "Dll4")  
+HSC_sig_genes <- c("Procr", "Pdzk1ip1", "Ltb", "Mllt3", "Ifitm1", "Gimap1", "Gimap6", "Limd2", "Trim47", "Neil2", "Vwf", "Pde1b", "Neo1", "Sqrdl", "Sult1a1", "Cd82", "Ramp2", "Ubl3", "Ly6a", "Cdkn1c", "Fgfr3", "Cldn10", "Ptpn14", "Mettl7a1", "Smtnl1", "Ctsf", "Gstm1", "Sox18", "Fads3")  
+preHSC_sig_genes <- c("Angpt1", "Art4", "Calcrl", "Chad", "Clu", "Crebrf", "Ctnnal1", "Cyp26b1", "Dnmt3b", "Fam84b", "Fgfr3", "Gcnt2", "Gfi1", "Hif3a", "Hlf", "Mamdc2", "Meis1", "Mllt3", "Mpl", "Msi2", "Mycn", "Nkx2-3", "Ocln", "Pdzk1ip1", "Procr", "Rab38", "Serpinf1", "Setbp1", "Slc18a2", "Trim47", "Trim6", "Vdr", "Vipr2", "Vwf")
+
+
+list_of_genesets <- list(HSC_sig_cav,HSC_SR_genes,AGM_HSC_sig_genes,HSC_sig_genes,preHSC_sig_genes)
+names(list_of_genesets) <- c("HSC_sig_cav_geneset","HSC_SR_genes_geneset","AGM_HSC_sig_genes_geneset","HSC_sig_genes_geneset","preHSC_sig_genes_genes_geneset")
+#Set colors for plotting gene set scores
+mycol <- c("gray80", "gray80", "gray80", "gray80", "gray80", "red1", "red4") # change as needed to highlight different populations
+#For loop to generate gene set heat maps
+for (geneset_name in names(list_of_genesets)) {
+  # Extract the geneset from the list
+  geneset <- list_of_genesets[[geneset_name]]
+  # Calculate gene set score
+  eb_cds <- estimate_score(endo_sub_cds, markers = geneset)
+  #Create data frame for ordering the cells
+  marker_coldata = colData(eb_cds) %>% as_tibble()
+  #Reorder data frame so that cells with highest gene set score are on the top.  Reorder from lowest expression to highest.  Has to be a dataframe
+  ordered_marker_coldata = marker_coldata[order(marker_coldata$score),]
+  #Plot in UMAP space
+  p <- ggplot (data=ordered_marker_coldata, mapping = aes(x=umap1, y=umap2, color = score, size = 0.25)) +
+    scale_size_continuous(range = c(0.25, 0.25)) +
+    #
+    scale_color_gradientn(colours = mycol) +
+    #bottom is entire data set
+    geom_point(data=ordered_marker_coldata, aes(umap1, umap2), color = "gray", size = 0.25, alpha = 0.8) + geom_jitter() +
+    #add facet wrap here by days
+    #facet_wrap(~day, ncol = 4) +
+    #Themes
+    theme(legend.position = "left") +
+    my_theme
+  #Save the plot
+  ggsave(filename = paste0(geneset_name, ".tiff"), plot = p, width = 4, height = 4, dpi = 300, bg = "white")
+}
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+#############################Extra Barb Code#################################
 
 #### Full cell type classification for generating Fig2A heatmap#######
 ###### Code Barb initially used ###########
@@ -923,25 +1065,6 @@ pheatmap::pheatmap(sub_samp_ordered, annotation_row = sub_anno_type,
                    filename = "FIGS2_EB_Heat_map_for_cell_type.tiff",
                    width = 8, height = 11, dpi = 300, bg = "transparent")
 dev.off()#Use here b/c heatmap seems to throw off plotter
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#############################Extra Barb Code#################################
 
 #mesoderm
 dfMixl1_Kdr = dfPaper_1 %>% filter(Mixl1>0.1 & Kdr>0.1)
