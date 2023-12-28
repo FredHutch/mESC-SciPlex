@@ -281,9 +281,12 @@ colData(EYS_cds)$umap2 = reducedDim(EYS_cds, type = "UMAP")[,2]
 colData(EYS_cds)$Cluster = clusters(EYS_cds, reduction_method = "UMAP")
 
 ####Load and or save cds data frames####
+#Save SP5_cds:
+saveRDS(SP5_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "SP5.RDS"))
 #Save EB3_cds:
 saveRDS(EB3_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "EB3.RDS"))
 #Save EYS_cds
 saveRDS(EYS_cds, file.path("/Users/adamheck/Desktop/mESC-SciPlex/processed_data/AH_CDS_122023/", "EYS.RDS"))
 
+# Turn off plotter
 dev.off()
